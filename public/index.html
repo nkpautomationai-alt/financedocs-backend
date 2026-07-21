@@ -1,0 +1,3317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinanceDocs — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --paper: #FFFFFF;
+    --surface: #F6F8FC;
+    --line: #E6EAF2;
+    --line-soft: #F0F2F7;
+    --ink: #0F1728;
+    --ink-2: #4A5468;
+    --ink-3: #6B7488;
+    --blue: #2451E0;
+    --blue-ink: #16337E;
+    --blue-tint: #EEF2FE;
+    --green: #1B7A4B;
+    --amber: #C77B1E;
+    --red: #C23B3B;
+    --red-tint: #FBEAEA;
+    --orange: #C2570F;
+    --orange-tint: #FCEEE3;
+    --purple: #6B3FC2;
+    --purple-tint: #F1ECFB;
+    --slate: #45526B;
+    --slate-tint: #E9ECF3;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  button { font-family: inherit; }
+  .app { display: flex; width: 100%; min-height: 100vh; }
+ 
+  /* Sidebar */
+  .sidebar {
+    width: 264px; flex-shrink: 0; height: 100vh; position: sticky; top: 0;
+    background: var(--surface); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+  }
+  .sidebar-header {
+    height: 64px; display: flex; align-items: center; padding: 0 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .logo-word { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .logo-word span { color: var(--blue); }
+ 
+  .nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    border-radius: 999px; border: none; background: transparent; color: var(--ink-2);
+    font-size: 15.5px; font-weight: 500; cursor: pointer; text-align: left; width: 100%;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .nav-item:hover { background: #EEF0F5; }
+  .nav-item svg { flex-shrink: 0; color: var(--ink-3); }
+  .nav-item.active { background: var(--blue-tint); color: var(--blue-ink); font-weight: 600; }
+  .nav-item.active svg { color: var(--blue); }
+ 
+  .plan-card {
+    padding: 12px; border-top: 1px solid var(--line);
+  }
+  .plan-box {
+    border-radius: 12px; background: var(--paper); border: 1px solid var(--line); padding: 12px 14px;
+  }
+  .plan-title { font-size: 14.5px; font-weight: 600; margin-bottom: 2px; }
+  .plan-sub { font-size: 14px; color: var(--ink-3); margin-bottom: 10px; line-height: 1.4; }
+  .plan-track { height: 5px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .plan-fill { height: 100%; width: 48%; background: var(--blue); border-radius: 999px; }
+ 
+  /* Top bar */
+  .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar {
+    height: 64px; flex-shrink: 0; border-bottom: 1px solid var(--line); background: var(--paper);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .page-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .search-box {
+    display: flex; align-items: center; gap: 8px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; width: 280px;
+  }
+  .search-box svg { color: var(--ink-3); flex-shrink: 0; }
+  .search-box input {
+    border: none; outline: none; background: transparent; font-size: 15.5px; color: var(--ink); width: 100%;
+  }
+  .icon-btn {
+    position: relative; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .icon-btn .dot {
+    position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--blue); border: 1.5px solid var(--paper);
+  }
+  .icon-btn .dot.locked {
+    width: 13px; height: 13px; top: 5px; right: 5px; background: var(--amber);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .profile-btn {
+    display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper);
+    border-radius: 8px; padding: 6px 10px 6px 6px; cursor: pointer;
+  }
+  .avatar {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--blue-tint); color: var(--blue-ink);
+    font-size: 13.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+  }
+  .profile-name { font-size: 14.5px; font-weight: 600; line-height: 1.2; text-align: left; }
+  .profile-role { font-size: 13px; color: var(--ink-3); line-height: 1.2; text-align: left; }
+ 
+  /* Content */
+  .content { flex: 1; padding: 24px; overflow-y: auto; }
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 { font-size: 22.5px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  .page-head p { font-size: 15.5px; color: var(--ink-2); margin: 4px 0 0; max-width: 560px; }
+ 
+  .stat-row { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+    flex: 1; min-width: 200px;
+  }
+  .stat-card.clickable { cursor: pointer; transition: border-color 120ms ease, box-shadow 120ms ease; }
+  .stat-card.clickable:hover, .stat-card.clickable:focus-visible {
+    border-color: #C9D6FA; box-shadow: 0 1px 6px rgba(36,81,224,0.08); outline: none;
+  }
+  .stat-hint {
+    font-size: 12.5px; color: var(--blue); font-weight: 600; margin-top: 10px; opacity: 0;
+    transition: opacity 120ms ease;
+  }
+  .stat-card.clickable:hover .stat-hint, .stat-card.clickable:focus-visible .stat-hint { opacity: 1; }
+  .stat-card-locked { background: #FBFCFE; }
+  .stat-lock-icon {
+    width: 34px; height: 34px; border-radius: 8px; background: var(--blue-tint); color: var(--ink-3);
+    display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+  .stat-hint-locked {
+    opacity: 1 !important; color: var(--ink-3); font-weight: 600;
+  }
+  .stat-label { font-size: 14.5px; color: var(--ink-2); margin-bottom: 8px; }
+  .stat-value-row { display: flex; align-items: baseline; gap: 8px; }
+  .stat-value { font-size: 27px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat-delta { font-size: 14px; font-weight: 600; color: var(--ink-3); }
+  .stat-delta.positive { color: var(--green); }
+ 
+  .panel-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .panel {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px; flex: 1; min-width: 300px;
+  }
+  /* Client Details page only — unifies every card (profile header, progress,
+     client info, required documents, reminder history, AI verification,
+     activity timeline) onto one consistent radius/shadow/hover language,
+     matching the document cards below. Scoped via this modifier class so
+     .panel's look everywhere else in FinanceDocs is unaffected. */
+  .client-card {
+    border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,40,0.05);
+    transition: box-shadow 180ms ease, border-color 180ms ease;
+  }
+  .client-card:hover { border-color: #D7DEEC; box-shadow: 0 3px 12px rgba(15,23,40,0.06); }
+  .panel-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center;
+    justify-content: space-between;
+  }
+  .panel-head span.title { font-size: 15.5px; font-weight: 600; }
+  .panel-head span.link { font-size: 14px; color: var(--blue); display: flex; align-items: center; gap: 2px; cursor: pointer; }
+  .panel-body { padding: 6px 8px; }
+  .panel-row-item {
+    display: flex; align-items: center; justify-content: space-between; padding: 11px 10px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .panel-row-item:last-child { border-bottom: none; }
+  .panel-row-left { display: flex; align-items: center; gap: 10px; }
+  .row-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); flex-shrink: 0; }
+  .row-label { font-size: 15px; }
+  .row-meta { font-size: 14px; color: var(--ink-3); }
+ 
+  .placeholder-panel {
+    min-height: 420px; border: 1px dashed #D7DEEC; border-radius: 12px; background: #FBFCFE;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px;
+  }
+  .placeholder-icon {
+    width: 52px; height: 52px; border-radius: 14px; background: var(--blue-tint);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+  }
+  .placeholder-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .placeholder-desc { font-size: 15.5px; color: var(--ink-2); max-width: 380px; line-height: 1.6; }
+  .placeholder-note { font-size: 14px; color: var(--ink-3); margin-top: 14px; }
+ 
+  /* Dashboard: stat card sparkline */
+  .stat-card { display: flex; flex-direction: column; }
+  .stat-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .stat-icon {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--blue-tint);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stat-icon svg { color: var(--blue); }
+  .stat-spark { margin-top: 10px; height: 28px; width: 100%; }
+ 
+  /* Charts row */
+  .charts-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-panel-body { padding: 16px 18px; }
+  .chart-canvas-wrap { position: relative; width: 100%; height: 220px; }
+  .donut-wrap { position: relative; width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; }
+  .donut-center { position: absolute; text-align: center; pointer-events: none; }
+  .donut-center .val { font-size: 22.5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .donut-center .lbl { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+  .legend { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; justify-content: space-between; font-size: 14.5px; }
+  .legend-left { display: flex; align-items: center; gap: 8px; color: var(--ink-2); }
+  .legend-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .legend-val { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+ 
+  /* Secondary panels row */
+  .secondary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 1080px) { .secondary-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 720px) { .secondary-row { grid-template-columns: 1fr; } }
+ 
+  .upload-row-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--line-soft); }
+  .upload-row-item:last-child { border-bottom: none; }
+  .upload-file-icon {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink-2);
+  }
+  .upload-info { min-width: 0; flex: 1; }
+  .upload-name { font-size: 14.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .upload-meta { font-size: 13.5px; color: var(--ink-3); margin-top: 1px; }
+ 
+  .reminder-row-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid var(--line-soft); }
+  .reminder-row-item:last-child { border-bottom: none; }
+  .reminder-date {
+    width: 38px; height: 38px; border-radius: 8px; background: var(--blue-tint); color: var(--blue-ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .reminder-date .day { font-size: 15px; font-weight: 700; line-height: 1; }
+  .reminder-date .mon { font-size: 10.5px; font-weight: 600; text-transform: uppercase; line-height: 1.2; }
+  .reminder-info { min-width: 0; flex: 1; }
+  .reminder-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .reminder-sub { font-size: 13.5px; color: var(--ink-3); margin-top: 1px; }
+ 
+  /* Progress bar (generic, used in table) */
+  .progress-track { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; width: 100%; }
+  .progress-fill { height: 100%; border-radius: 999px; background: var(--blue); }
+ 
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 600; line-height: 1.4; white-space: nowrap;
+  }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge.completed { background: #E9F6EF; color: var(--green); }
+  .badge.completed .badge-dot { background: var(--green); }
+  .badge.in-progress { background: var(--blue-tint); color: var(--blue-ink); }
+  .badge.in-progress .badge-dot { background: var(--blue); }
+  .badge.pending { background: #FCF3E7; color: var(--amber); }
+  .badge.pending .badge-dot { background: var(--amber); }
+  .badge.received { background: var(--blue-tint); color: var(--blue-ink); }
+  .badge.received .badge-dot { background: var(--blue); }
+  .badge.verified { background: #E9F6EF; color: var(--green); }
+  .badge.verified .badge-dot { background: var(--green); }
+  .badge.rejected { background: #FBEAEA; color: var(--red); }
+  .badge.rejected .badge-dot { background: var(--red); }
+  .badge.neutral { background: var(--surface); color: var(--ink-2); }
+  .badge.neutral .badge-dot { background: var(--ink-3); }
+ 
+  /* Client progress table */
+  .table-panel { margin-bottom: 24px; }
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ink-3); text-transform: uppercase;
+    letter-spacing: 0.02em; padding: 10px 18px; border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  .data-table td { padding: 12px 18px; border-bottom: 1px solid var(--line-soft); font-size: 15px; vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .client-cell { display: flex; align-items: center; gap: 10px; }
+  .client-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--blue-tint); color: var(--blue-ink);
+    font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .client-name { font-weight: 600; color: var(--ink); }
+  .client-email { font-size: 13.5px; color: var(--ink-3); }
+  .progress-cell { display: flex; align-items: center; gap: 10px; min-width: 140px; }
+  .progress-pct { font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; width: 34px; flex-shrink: 0; }
+ 
+  @media (max-width: 700px) {
+    .table-panel { overflow-x: auto; }
+    .data-table { min-width: 640px; }
+  }
+
+  /* Clients toolbar */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--blue); color: #fff; border: none;
+    border-radius: 8px; padding: 9px 14px; font-size: 15px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    transition: background 120ms ease;
+  }
+  .btn-primary:hover { background: #1d43c2; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .select-input {
+    border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 12px; font-size: 15px;
+    color: var(--ink-2); cursor: pointer; outline: none;
+  }
+  .toolbar .search-box { width: 240px; }
+
+  .data-table tr.clickable { cursor: pointer; }
+  .data-table tr.clickable:hover td { background: var(--surface); }
+  .table-email { color: var(--ink-2); }
+  .table-empty { text-align: center; padding: 28px 18px; color: var(--ink-3); font-size: 15px; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Client lookup + profile */
+  .lookup-card { padding: 24px; max-width: 460px; }
+  .lookup-label { font-size: 14.5px; font-weight: 600; color: var(--ink); margin-bottom: 8px; display: block; }
+  .lookup-row { display: flex; gap: 10px; }
+  .lookup-input {
+    flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 15.5px;
+    color: var(--ink); outline: none; transition: border-color 120ms ease;
+  }
+  .lookup-input:focus { border-color: var(--blue); }
+  .lookup-hint { font-size: 14px; color: var(--ink-3); margin-top: 10px; }
+  .loading-spinner-row { text-align: center; color: var(--ink-2); font-size: 15px; padding: 30px 20px; }
+  .reminder-summary-row { padding: 12px 14px; font-size: 15px; color: var(--ink); border-bottom: 1px solid var(--line-soft); }
+
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; color: var(--ink-2);
+    background: none; border: none; cursor: pointer; padding: 0; margin-bottom: 16px;
+  }
+  .back-link:hover { color: var(--blue); }
+  .profile-header {
+    display: flex; flex-direction: column; gap: 16px; padding: 20px; margin-bottom: 14px;
+  }
+  .profile-header-top {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .profile-header-actions {
+    display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line-soft);
+  }
+  .profile-avatar {
+    width: 60px; height: 60px; border-radius: 50%; background: var(--blue-tint); color: var(--blue-ink);
+    font-size: 22.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .profile-id { flex: 1; min-width: 200px; }
+  .profile-id h2 { margin: 0 0 4px; font-size: 20.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .profile-id .sub { font-size: 15px; color: var(--ink-2); }
+  .profile-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+  .profile-stat .lbl { font-size: 13.5px; color: var(--ink-3); margin-bottom: 4px; }
+  .profile-stat .val { font-size: 17px; font-weight: 600; color: var(--ink); }
+
+  .profile-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; }
+  @media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } }
+
+  .detail-list { padding: 6px 4px; }
+  .detail-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--line-soft); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 14.5px; color: var(--ink-3); display: flex; align-items: center; gap: 8px; }
+  .detail-value { font-size: 15px; color: var(--ink); font-weight: 500; text-align: right; }
+  .detail-value-empty { color: var(--ink-3); font-weight: 500; font-style: normal; }
+
+  .doc-list { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+  .doc-row.doc-card {
+    display: flex; flex-direction: column; gap: 12px;
+    background: #FFFFFF; border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; box-shadow: 0 1px 2px rgba(15,23,40,0.05);
+    transition: box-shadow 180ms ease, border-color 180ms ease;
+  }
+  .doc-row.doc-card:hover { border-color: #D7DEEC; box-shadow: 0 3px 12px rgba(15,23,40,0.07); }
+  .doc-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .doc-card-title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .doc-card-icon {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--blue-tint); border: 1px solid #DCE4FB;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--blue);
+  }
+  .doc-card-title {
+    font-size: 16.5px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .doc-card-top .badge { flex-shrink: 0; }
+  .doc-card-meta { font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+  .doc-card-actions .btn-approve, .doc-card-actions .btn-ghost, .doc-card-actions .btn-view {
+    font-size: 13px; padding: 7px 13px; flex-shrink: 0;
+  }
+  .btn-view {
+    display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF; color: var(--ink-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: background 120ms ease, border-color 120ms ease;
+  }
+  .btn-view:hover:not(:disabled) { background: var(--surface); border-color: #D7DEEC; }
+  .btn-view:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-view.locked { color: var(--ink-3); }
+  .btn-view.locked svg { flex-shrink: 0; }
+  /* Locked Professional-edition actions (View / Approve / Reupload / bulk
+     reupload) keep each button's original color and shape — only the
+     lock glyph is added, aligned the same way everywhere. */
+  .btn-approve.locked, .btn-ghost.locked {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-approve.locked svg, .btn-ghost.locked svg { flex-shrink: 0; }
+  .doc-file-link { color: var(--blue); text-decoration: none; font-weight: 500; }
+  .doc-file-link:hover { text-decoration: underline; }
+  .doc-file-nolink { color: var(--ink-3); cursor: default; }
+  .doc-row-feedback { padding: 0 20px 12px; font-size: 12.5px; color: var(--ink-3); }
+  @media (max-width: 560px) {
+    .doc-card-top { flex-wrap: wrap; }
+    .doc-card-actions { flex-direction: column; align-items: stretch; }
+    .doc-card-actions > * { width: 100%; justify-content: center; text-align: center; }
+  }
+
+  .timeline { padding: 16px 18px; }
+  .timeline-item { display: flex; gap: 12px; padding-bottom: 16px; position: relative; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item:not(:last-child)::before {
+    content: ""; position: absolute; left: 5px; top: 16px; bottom: 0; width: 1px; background: var(--line);
+  }
+  .timeline-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--blue-tint); border: 2px solid var(--blue); flex-shrink: 0; margin-top: 2px; }
+  .timeline-text { font-size: 15px; color: var(--ink); }
+  .timeline-time { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+
+  /* Activity timeline — client-level audit trail (icon left, bold
+     description, muted performer/timestamp underneath, connected by a
+     subtle vertical line). Content/format is untouched; this only
+     changes presentation. */
+  .activity-timeline { padding: 6px 6px 2px; }
+  .activity-item {
+    display: flex; gap: 14px; position: relative; padding: 8px 8px 20px;
+    border-radius: 10px; transition: background 180ms ease;
+    animation: activityFadeIn 360ms ease both;
+  }
+  .activity-item:last-child { padding-bottom: 8px; }
+  .activity-item:hover { background: var(--surface); }
+  .activity-item:not(:last-child)::before {
+    content: ""; position: absolute; left: 27px; top: 50px; bottom: 0; width: 1px; background: var(--line);
+  }
+  .activity-icon {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--blue-tint); border: 1px solid #DCE4FB;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;
+    position: relative; z-index: 1;
+  }
+  /* Per Activity Type icon colors. */
+  .activity-icon.type-created  { background: var(--surface);     border-color: var(--line); }
+  .activity-icon.type-uploaded { background: var(--blue-tint);   border-color: #DCE4FB; }
+  .activity-icon.type-approved { background: #E9F6EF;            border-color: #BFE5CF; }
+  .activity-icon.type-reupload { background: var(--orange-tint); border-color: #F3D7BA; }
+  .activity-icon.type-reminder { background: #FCF3E7;            border-color: #F0DDB8; }
+  .activity-icon.type-ai       { background: var(--purple-tint); border-color: #DED1F5; }
+  .activity-icon.type-system   { background: var(--slate-tint);  border-color: #D7DCE6; }
+  .activity-body { flex: 1; min-width: 0; padding-top: 5px; }
+  .activity-desc { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+  .activity-meta { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .activity-meta .dot-sep { margin: 0 5px; opacity: 0.6; }
+  @keyframes activityFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .activity-skeleton-icon { background: var(--surface); border-color: var(--line); }
+  .activity-skeleton-line {
+    height: 12px; border-radius: 4px; background-color: var(--surface);
+    background-image: linear-gradient(90deg, var(--surface) 0%, #EDF1F8 50%, var(--surface) 100%);
+    background-size: 200% 100%; animation: activitySkeletonPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes activitySkeletonPulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 7px; background: #FFFFFF; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 13px; font-size: 14.5px; font-weight: 600;
+    cursor: pointer; text-decoration: none; flex-shrink: 0; transition: background 120ms ease, border-color 120ms ease;
+  }
+  .btn-secondary:hover { background: var(--surface); border-color: #D7DEEC; }
+  .btn-secondary svg { flex-shrink: 0; }
+
+  .overall-progress-panel { padding: 16px 20px; margin-bottom: 14px; }
+  .overall-progress-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .overall-progress-top .lbl { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .overall-progress-top .pct { font-size: 15px; font-weight: 600; color: var(--blue); font-variant-numeric: tabular-nums; }
+  .stage-seg { height: 7px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .stage-seg .fill { height: 100%; background: var(--blue); border-radius: 999px; }
+
+  .verify-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line-soft);
+  }
+  .verify-row:last-child { border-bottom: none; }
+  .verify-icon {
+    width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; background: var(--surface); color: var(--ink-2);
+  }
+  .verify-icon.verified { background: #E9F6EF; color: var(--green); }
+  .verify-icon.rejected { background: #FBEAEA; color: var(--red); }
+  .verify-icon.received { background: var(--blue-tint); color: var(--blue); }
+  .verify-icon.pending { background: #FCF3E7; color: var(--amber); }
+  .verify-body { flex: 1; min-width: 0; }
+  .verify-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .verify-note { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+
+  .reminder-history-row {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line-soft);
+  }
+  .reminder-history-row:last-child { border-bottom: none; }
+  .reminder-channel {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink-2);
+  }
+  .reminder-history-body { flex: 1; min-width: 0; }
+  .reminder-history-title { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .reminder-history-sub { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+  .reminder-status { font-size: 13.5px; font-weight: 600; flex-shrink: 0; }
+  .reminder-status.opened { color: var(--green); }
+  .reminder-status.sent { color: var(--blue); }
+  .reminder-status.none { color: var(--ink-3); }
+  .locked-note {
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14.5px; color: var(--ink-3);
+  }
+
+  /* Document Templates page */
+  .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .template-card {
+    background: #FFFFFF; border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+    display: flex; flex-direction: column; gap: 12px; cursor: pointer;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .template-card:hover { border-color: #C9D6FA; box-shadow: 0 1px 6px rgba(36,81,224,0.08); }
+  .template-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .template-icon {
+    width: 38px; height: 38px; border-radius: 10px; background: var(--blue-tint); color: var(--blue);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .template-name { font-size: 16.5px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .template-desc { font-size: 14.5px; color: var(--ink-2); line-height: 1.5; min-height: 36px; }
+  .template-meta-row {
+    display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: var(--ink-3);
+    border-top: 1px solid var(--line-soft); padding-top: 12px;
+  }
+  .template-actions { display: flex; gap: 6px; }
+  .icon-action-btn {
+    width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--line); background: #FFFFFF;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-2); flex-shrink: 0;
+  }
+  .icon-action-btn:hover { background: var(--surface); }
+  .icon-action-btn.danger:hover { background: #FBEAEA; color: var(--red); border-color: #F3C9C9; }
+
+  .template-card.add-card {
+    align-items: center; justify-content: center; border: 1.5px dashed #D7DEEC; color: var(--blue);
+    min-height: 168px; gap: 8px; background: #FBFCFE;
+  }
+  .template-card.add-card:hover { background: var(--blue-tint); border-color: #C9D6FA; }
+  .template-card.add-card span { font-size: 15px; font-weight: 600; }
+  .add-card-icon {
+    width: 40px; height: 40px; border-radius: 50%; background: #FFFFFF; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; color: var(--blue);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 40, 0.45); display: flex; align-items: center;
+    justify-content: center; z-index: 100; padding: 20px;
+  }
+  .modal-box { background: #FFFFFF; border-radius: 14px; padding: 24px; width: 420px; max-width: 100%; }
+  .modal-title { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .modal-sub { font-size: 14.5px; color: var(--ink-2); margin-bottom: 18px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 14.5px; font-weight: 600; color: var(--ink); margin-bottom: 6px; display: block; }
+  .form-input, .form-textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; font-size: 15px;
+    color: var(--ink); outline: none; font-family: inherit; transition: border-color 120ms ease;
+  }
+  .form-textarea { resize: vertical; min-height: 64px; }
+  .form-input:focus, .form-textarea:focus { border-color: var(--blue); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+  .btn-ghost {
+    background: none; border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; font-size: 15px;
+    font-weight: 600; color: var(--ink-2); cursor: pointer;
+  }
+  .btn-ghost:hover { background: var(--surface); }
+  .btn-approve {
+    background: #E9F6EF; border: 1px solid #BFE5CF; border-radius: 8px; padding: 9px 14px; font-size: 15px;
+    font-weight: 600; color: var(--green); cursor: pointer;
+  }
+  .btn-approve:hover { background: #DCF1E4; }
+
+  /* Upgrade modal — reason banner + edition blocks */
+  .upgrade-reason-banner {
+    background: var(--blue-tint); border: 1px solid #DCE4FB; border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .upgrade-reason-title { font-size: 14.5px; font-weight: 700; color: var(--blue-ink); margin-bottom: 3px; }
+  .upgrade-reason-body { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+  .upgrade-edition-block {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-top: 12px;
+  }
+  .upgrade-edition-name { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+  .upgrade-edition-desc { font-size: 13.5px; color: var(--ink-2); margin-bottom: 10px; line-height: 1.5; }
+  .upgrade-edition-includes { font-size: 12.5px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 8px; }
+  .upgrade-edition-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .upgrade-edition-list li {
+    display: flex; align-items: flex-start; gap: 7px; font-size: 13.5px; color: var(--ink);
+  }
+  .upgrade-edition-list li::before {
+    content: ""; flex-shrink: 0; width: 14px; height: 14px; margin-top: 2px; border-radius: 3px;
+    background: var(--green);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/70% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/70% no-repeat;
+  }
+
+  /* Clickable locked panel (e.g. AI verification results) */
+  .locked-note-btn {
+    width: 100%; text-align: left; background: none; border: none; cursor: pointer; font: inherit;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .locked-note-btn:hover { background: var(--surface); color: var(--blue); }
+  .locked-note-btn .locked-note-cta { font-weight: 600; color: var(--blue); }
+
+  /* Compare editions table */
+  .compare-table-wrap { max-height: 55vh; overflow: auto; margin-top: 14px; border: 1px solid var(--line-soft); border-radius: 10px; }
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .compare-table th, .compare-table td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line-soft); }
+  .compare-table thead th {
+    font-weight: 600; color: var(--ink-2); position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  .compare-table tbody tr:last-child td { border-bottom: none; }
+  .compare-cell { text-align: center; }
+  .compare-cell svg.yes { color: var(--green); }
+  .compare-cell svg.no { color: var(--ink-3); opacity: 0.45; }
+  .compare-current { color: var(--blue); font-weight: 600; font-size: 11px; margin-left: 4px; }
+
+  /* Toggle switch */
+  .toggle-switch { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--line); border-radius: 999px; cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .toggle-slider::before {
+    content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #FFFFFF;
+    border-radius: 50%; transition: transform 150ms ease; box-shadow: 0 1px 2px rgba(15,23,40,0.15);
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--blue); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+  /* Template editor */
+  .editor-title-input {
+    font-size: 22.5px; font-weight: 600; color: var(--ink); border: none; outline: none; background: transparent;
+    width: 100%; padding: 3px 6px; border-radius: 6px; letter-spacing: -0.01em; font-family: inherit;
+  }
+  .editor-title-input:focus { background: var(--surface); }
+  .editor-desc-input {
+    font-size: 15px; color: var(--ink-2); border: none; outline: none; background: transparent; width: 100%;
+    padding: 3px 6px; border-radius: 6px; margin-top: 4px; font-family: inherit;
+  }
+  .editor-desc-input:focus { background: var(--surface); }
+  .editor-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 14px; color: var(--ink-3); }
+
+  .doc-editor-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line-soft); }
+  .doc-editor-row:last-child { border-bottom: none; }
+  .doc-drag { color: var(--ink-3); flex-shrink: 0; cursor: grab; }
+  .doc-name-input {
+    flex: 1; min-width: 0; border: none; background: transparent; font-size: 15.5px; color: var(--ink);
+    font-weight: 500; outline: none; padding: 7px 9px; border-radius: 6px; font-family: inherit;
+  }
+  .doc-name-input:focus { background: var(--surface); }
+  .doc-name-input::placeholder { color: var(--ink-3); font-weight: 400; }
+  .doc-required-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .doc-required-label { font-size: 13.5px; color: var(--ink-3); }
+  .doc-remove-btn {
+    width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: var(--ink-3);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .doc-remove-btn:hover { background: #FBEAEA; color: var(--red); }
+  .add-doc-footer { padding: 12px 14px; }
+
+  /* Generate client link panel (replaces old inline upload form — client uploads now live on the separate portal) */
+  .link-gen-card { padding: 20px; }
+
+  /* Billing page */
+  .current-plan-card { padding: 20px 22px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .current-plan-card .lbl { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; }
+  .current-plan-card .name { font-size: 17px; font-weight: 600; color: var(--ink); }
+  .license-status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+  .license-status-grid .lbl { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; }
+  .license-status-grid .name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .billing-plan-card {
+    background: #FFFFFF; border: 1px solid var(--line); border-radius: 12px; padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .billing-plan-card.current { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+  .billing-plan-card-tier { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--blue); }
+  .billing-plan-card-name { font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+  .billing-plan-card-price { font-size: 13px; color: var(--ink-2); }
+  .plan-feature-list { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--ink-2); }
+  .plan-feature-list .feat { display: flex; align-items: flex-start; gap: 7px; }
+  .plan-feature-list .feat svg { flex-shrink: 0; margin-top: 2px; }
+  .plan-feature-list .feat.included { color: var(--ink); }
+  .plan-feature-list .feat.excluded { color: var(--ink-3); }
+
+  /* Settings page */
+  .settings-form { max-width: 520px; padding: 20px; }
+  .settings-form .form-group:last-of-type { margin-bottom: 0; }
+  .settings-hint { font-size: 11.5px; color: var(--ink-3); margin-top: -8px; margin-bottom: 14px; }
+  .settings-save-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+
+  /* Login screen */
+  .login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--surface); padding: 20px;
+  }
+  .login-card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+    padding: 32px; width: 360px; max-width: 100%;
+  }
+  .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .login-title { font-size: 18px; font-weight: 600; color: var(--ink); }
+  .login-sub { font-size: 13px; color: var(--ink-2); margin-top: 4px; line-height: 1.5; }
+
+  .profile-menu-wrap { position: relative; }
+  .profile-dropdown {
+    position: absolute; top: calc(100% + 6px); right: 0; background: #FFFFFF; border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: 0 6px 20px rgba(15,23,40,0.12); min-width: 150px; overflow: hidden; z-index: 50;
+  }
+  .profile-dropdown-item {
+    display: block; width: 100%; text-align: left; padding: 10px 14px; font-size: 13px; color: var(--ink);
+    background: none; border: none; cursor: pointer;
+  }
+  .profile-dropdown-item:hover { background: var(--surface); }
+  .profile-dropdown-item + .profile-dropdown-item { border-top: 1px solid var(--line-soft); }
+  .link-output-row { display: flex; gap: 10px; margin-top: 14px; }
+  .share-btn-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .share-btn-row .btn-secondary { text-decoration: none; }
+  .link-output-input {
+    flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 15px;
+    color: var(--ink-2); background: var(--surface); outline: none; font-family: inherit;
+  }
+  .copy-feedback { font-size: 14px; color: var(--green); margin-top: 8px; height: 16px; }
+</style>
+</head>
+<body>
+<div class="app" id="appShell">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v2"/><path d="M2 13.5V20a2 2 0 0 0 2 2h13.5"/><path d="m9 17 2 2 4-4"/></svg>
+        </div>
+        <div class="logo-word">Finance<span>Docs</span></div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="plan-card">
+      <div class="plan-box">
+        <div class="plan-title" id="planTitle">Basic edition</div>
+        <div class="plan-sub" id="planSub">48 of 100 client seats used</div>
+        <div class="plan-track"><div class="plan-fill"></div></div>
+      </div>
+    </div>
+  </aside>
+ 
+  <div class="main-col">
+    <header class="topbar">
+      <div class="page-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="globalSearchInput" placeholder="Search a client by name or ID…" />
+        </div>
+        <button class="icon-btn" aria-label="Notifications" id="notificationsBellBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="dot" id="notificationsBellBadge"></span>
+        </button>
+        <div class="profile-menu-wrap" id="profileMenuWrap">
+          <button class="profile-btn" id="profileBtn">
+            <div class="avatar" id="advisorAvatar">AD</div>
+            <div>
+              <div class="profile-name" id="advisorName">Advisor</div>
+              <div class="profile-role">Advisor</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#96A0B4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown" style="display:none;">
+            <button class="profile-dropdown-item" id="profileDropdownSettings">Settings</button>
+            <button class="profile-dropdown-item" id="profileDropdownLogout">Log out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<div id="loginScreen" class="login-screen" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-mark">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v2"/><path d="M2 13.5V20a2 2 0 0 0 2 2h13.5"/><path d="m9 17 2 2 4-4"/></svg>
+      </div>
+      <div class="logo-word">Finance<span>Docs</span></div>
+    </div>
+    <div class="login-title">Advisor sign in</div>
+    <div class="login-sub">Enter your access password to open the dashboard.</div>
+    <div class="form-group" style="margin-top:18px;">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="loginPasswordInput" type="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn-primary" id="loginSubmitBtn" style="width:100%; justify-content:center; margin-top:4px;">Sign in</button>
+    <div class="copy-feedback" id="loginFeedback" style="margin-top:10px; min-height:16px;"></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+ 
+<script>
+const ICONS = {
+  dashboard: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+  clients: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  templates: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+  uploads: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>',
+  verification: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>',
+  activity: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  integrations: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v4"/><path d="M15 2v4"/><path d="M9 18v4"/><path d="M15 18v4"/><path d="M4 9h4"/><path d="M4 15h4"/><path d="M18 9h4"/><path d="M18 15h4"/><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  license: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>',
+  settings: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>'
+};
+ 
+const NAV_ITEMS = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "clients", label: "Clients" },
+  { key: "templates", label: "Document Templates" },
+  { key: "uploads", label: "Send Upload Link" },
+  { key: "verification", label: "AI Verification" },
+  { key: "activity", label: "Activity" },
+  { key: "integrations", label: "Integrations" },
+  { key: "license", label: "License" },
+  { key: "settings", label: "Settings" },
+];
+
+/* Which plan tier each section requires. Sections not listed here
+   are available on every plan (Dashboard, Clients, Document Templates,
+   Upload Link, Billing, Settings — core + account management). */
+const NAV_PLAN_REQUIREMENT = {
+  templates: "professional",
+  verification: "premium",
+  activity: "professional",
+  integrations: "professional",
+};
+
+const PAGE_META = {
+  dashboard: { title: "Dashboard", description: "A daily snapshot of client documents, verification status, and firm activity." },
+  clients: { title: "Clients", description: "Manage client profiles, linked accounts, and document history in one place." },
+  templates: { title: "Document templates", description: "Build and version the intake, disclosure, and compliance templates your firm sends to clients." },
+  uploads: { title: "Send Upload Link", description: "Generate a secure, client-specific upload link. Clients upload documents on their own separate portal, not on this dashboard." },
+  verification: { title: "AI verification", description: "Review automated checks for identity, signatures, and required disclosures." },
+  activity: { title: "Activity", description: "A running log of document events across your firm — uploads, approvals, and edits." },
+  integrations: { title: "Integrations", description: "Connect FinanceDocs to your CRM, custodian, and e-signature tools." },
+  license: { title: "License", description: "Your current edition and what each edition includes." },
+  settings: { title: "Settings", description: "Firm details, advisor permissions, and security preferences." },
+};
+ 
+/* ============================================================
+   Advisor authentication
+   ------------------------------------------------------------
+   This is a SHARED-PASSWORD gate, not a per-advisor login system.
+   The password the advisor enters becomes the value sent in the
+   X-API-Key header on every request to your n8n webhooks. There is
+   no separate "Login" workflow — logging in just means "the next
+   real API call succeeded with this password attached."
+
+   IMPORTANT: this only protects anything if your n8n webhooks
+   themselves reject requests without a matching X-API-Key header.
+   Right now, unless you've added that check, this login screen is
+   cosmetic — the webhook URLs are still open to anyone who has them.
+   See the setup notes further down for exactly what to add in n8n.
+   ============================================================ */
+const AUTH_HEADER_NAME = "X-API-Key";
+const AUTH_TOKEN_STORAGE_KEY = "financedocs_auth_token";
+// Any one advisor-facing endpoint works here — it's only used to
+// verify the password is accepted, not to fetch anything specific.
+const AUTH_CHECK_URL = "https://nkpflow.app.n8n.cloud/webhook/dashboard";
+
+let authToken = null;
+try { authToken = sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || null; } catch (err) { authToken = null; }
+
+function isLoggedIn() { return !!authToken; }
+
+/* Use this instead of a raw fetch() for anything that talks to an
+   advisor-only n8n webhook (Dashboard, Client Details, Clients
+   Search, Templates). Do NOT use this for the client-facing
+   upload-page / upload-document webhooks — clients don't have (and
+   shouldn't need) the advisor password. */
+async function authFetch(url, options) {
+  const opts = { ...(options || {}) };
+  opts.headers = { ...(opts.headers || {}), [AUTH_HEADER_NAME]: authToken || "" };
+  const res = await fetch(url, opts);
+  if (res.status === 401 || res.status === 403) {
+    logout("Your session expired. Please sign in again.");
+  }
+  return res;
+}
+
+function showLoginScreen(message) {
+  document.getElementById("appShell").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  const feedback = document.getElementById("loginFeedback");
+  if (feedback) {
+    feedback.textContent = message || "";
+    feedback.style.color = "var(--amber)";
+  }
+  const pwInput = document.getElementById("loginPasswordInput");
+  if (pwInput) {
+    pwInput.value = "";
+    pwInput.focus();
+  }
+}
+
+function showApp() {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appShell").style.display = "flex";
+}
+
+function logout(message) {
+  authToken = null;
+  try { sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY); } catch (err) { /* ignore */ }
+  showLoginScreen(message);
+}
+
+async function attemptLogin(password) {
+  const btn = document.getElementById("loginSubmitBtn");
+  const feedback = document.getElementById("loginFeedback");
+  btn.disabled = true;
+  btn.textContent = "Signing in…";
+  feedback.textContent = "";
+
+  try {
+    const res = await fetch(AUTH_CHECK_URL, { headers: { [AUTH_HEADER_NAME]: password } });
+    if (res.status === 401 || res.status === 403) {
+      feedback.textContent = "Incorrect password.";
+      feedback.style.color = "#C0392B";
+      return;
+    }
+    if (!res.ok) {
+      feedback.textContent = "Couldn't reach the server. Please try again.";
+      feedback.style.color = "#C0392B";
+      return;
+    }
+    authToken = password;
+    try { sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, password); } catch (err) { /* ignore */ }
+    showApp();
+    bootstrapApp();
+  } catch (err) {
+    feedback.textContent = "Couldn't reach the server. Please try again.";
+    feedback.style.color = "#C0392B";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Sign in";
+  }
+}
+
+function initLoginScreen() {
+  const btn = document.getElementById("loginSubmitBtn");
+  const input = document.getElementById("loginPasswordInput");
+  btn.addEventListener("click", () => attemptLogin(input.value));
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") attemptLogin(input.value); });
+}
+
+function showInfoModal(title, body) {
+  const modalRoot = document.getElementById("modalRoot");
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="infoModalOverlay">
+      <div class="modal-box" style="width:380px;">
+        <div class="modal-title">${escapeHTML(title)}</div>
+        <div class="modal-sub">${escapeHTML(body)}</div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="closeInfoModalBtn">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("infoModalOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "infoModalOverlay") modalRoot.innerHTML = "";
+  });
+  document.getElementById("closeInfoModalBtn").addEventListener("click", () => { modalRoot.innerHTML = ""; });
+}
+
+function updateNotificationsBellBadge() {
+  const badge = document.getElementById("notificationsBellBadge");
+  if (!badge) return;
+  if (!planAtLeast("professional")) {
+    badge.classList.add("locked");
+    badge.innerHTML = '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+    badge.style.display = "flex";
+  } else {
+    // No fake "you have notifications" dot — nothing is wired up yet,
+    // so there's nothing real to indicate.
+    badge.classList.remove("locked");
+    badge.innerHTML = "";
+    badge.style.display = "none";
+  }
+}
+
+function initNotificationsBell() {
+  const btn = document.getElementById("notificationsBellBtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    if (!planAtLeast("professional")) {
+      openUpgradeModal("professional");
+    } else {
+      showInfoModal("Notifications", "Advisor notifications aren't connected yet — hook this up to your Notifications workflow.");
+    }
+  });
+}
+
+function initProfileMenu() {
+  const wrap = document.getElementById("profileMenuWrap");
+  const btn = document.getElementById("profileBtn");
+  const dropdown = document.getElementById("profileDropdown");
+  if (!wrap || !btn || !dropdown) return;
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+  });
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target)) dropdown.style.display = "none";
+  });
+  document.getElementById("profileDropdownSettings").addEventListener("click", () => {
+    dropdown.style.display = "none";
+    active = "settings";
+    renderNav();
+    renderContent();
+    document.getElementById("topbarTitle").textContent = PAGE_META[active].title;
+  });
+  document.getElementById("profileDropdownLogout").addEventListener("click", () => {
+    dropdown.style.display = "none";
+    logout();
+  });
+}
+
+let active = "dashboard";
+
+/* ============================================================
+   App settings — cached in this browser via localStorage for instant
+   boot, backed by the Settings API (GET to load, POST to save) so
+   settings are shared across devices. See fetchAppSettings() /
+   persistAppSettings() below for the actual network calls.
+   ============================================================ */
+const SETTINGS_STORAGE_KEY = "financedocs_settings_v1";
+const SETTINGS_GET_URL = "https://nkpflow.app.n8n.cloud/webhook/settings";
+const SETTINGS_POST_URL = "https://nkpflow.app.n8n.cloud/webhook/Save Settings";
+
+const DEFAULT_SETTINGS = {
+  plan: "basic", // "basic" | "professional" | "premium"
+  firmName: "",
+  advisorName: "",
+  advisorEmail: "",
+  clientPortalBaseUrl: "https://your-domain.com/docflow-client-portal.html",
+  salesEmail: "",
+  supportEmail: "",
+  demoBookingLink: "",
+};
+
+// Local cache only — read synchronously so the app has something to
+// show the instant it boots, before the Settings API has responded.
+function loadAppSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch (err) {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+// Writes the local cache only. persistAppSettings() below is what
+// actually saves to the Settings API — this just keeps next boot fast
+// and gives the app something to fall back on if that request fails.
+function cacheAppSettings(settings) {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+let appSettings = loadAppSettings();
+
+// GET https://nkpflow.app.n8n.cloud/webhook/settings
+// Same authFetch() pattern as every other advisor-facing API. Fired
+// once at boot (see bootstrapApp()); if it fails for any reason, the
+// app just keeps using whatever's cached locally.
+async function fetchAppSettings() {
+  try {
+    const res = await authFetch(encodeURI(SETTINGS_GET_URL));
+    const data = await res.json();
+    if (!data || data.success === false || !data.settings) {
+      throw new Error("Settings request failed.");
+    }
+    appSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+    cacheAppSettings(appSettings);
+    applyPlanUI();
+    renderNav();
+    if (active === "settings") renderContent();
+  } catch (err) {
+    console.warn("[FinanceDocs] Could not load settings from the Settings API — using the local copy.", err);
+  }
+}
+
+// POST https://nkpflow.app.n8n.cloud/webhook/Save Settings
+// Called from the Settings page's Save button (see initSettingsPage()).
+async function persistAppSettings(settings) {
+  cacheAppSettings(settings);
+  const res = await authFetch(encodeURI(SETTINGS_POST_URL), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || (data && data.success === false)) {
+    throw new Error("Settings save failed.");
+  }
+  return true;
+}
+
+/* ============================================================
+   Plan tier gating
+   Change the plan on the Billing page (or Settings). This purely
+   controls what the advisor UI shows/hides; it does not itself
+   activate/deactivate n8n workflows — the Reminder workflow must
+   still be enabled/disabled in n8n directly.
+   ============================================================ */
+function getCurrentPlan() { return appSettings.plan; }
+
+// Internal tier keys stay as basic/professional/premium throughout the
+// code (avoids touching every gating check) — "premium" is just
+// display-renamed to "Enterprise" everywhere the advisor sees it.
+const PLAN_DISPLAY_NAMES = {
+  basic: "Basic",
+  professional: "Professional",
+  premium: "Premium",
+};
+
+const PLAN_LABELS = {
+  basic: "Client Onboarding & Document Automation System",
+  professional: "Advisor Workflow Automation System",
+  premium: "AI Client Assistant Platform",
+};
+
+function planAtLeast(tier) {
+  const order = ["basic", "professional", "premium"];
+  return order.indexOf(getCurrentPlan()) >= order.indexOf(tier);
+}
+
+/* ============================================================
+   Clients module state
+   ============================================================ */
+let clientsView = "search";
+let selectedClient = null;
+let selectedDocuments = [];
+let clientLoading = false;
+let clientLoadError = null;
+let selectedActivities = [];
+let activityLoading = false;
+let activityLoadError = null;
+let activityRequestToken = 0;
+
+let clientSearchQuery = "";
+let clientSearchResults = [];
+let clientSearchLoading = false;
+let clientSearchError = null;
+ 
+function renderNav() {
+  const nav = document.getElementById("nav");
+  nav.innerHTML = NAV_ITEMS.map(item => `
+    <button class="nav-item ${item.key === active ? 'active' : ''}" data-key="${item.key}">
+      ${ICONS[item.key]}
+      <span>${item.label}</span>
+    </button>
+  `).join("");
+  nav.querySelectorAll(".nav-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      active = btn.dataset.key;
+      renderNav();
+      renderContent();
+      document.getElementById("topbarTitle").textContent = PAGE_META[active].title;
+    });
+  });
+}
+ 
+const STAT_ICONS = {
+  clients: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  pending: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9.5 15.5 12 18l2.5-2.5"/></svg>',
+  completed: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>',
+  waiting: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+  received: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg>',
+  inprogress: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/></svg>',
+  approved: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>',
+};
+
+// Cards listed here show a lock icon + tier name in place of their
+// value/hint when the current plan doesn't meet the required tier,
+// instead of the normal number-and-"View clients ›" layout.
+const STAT_CARD_PLAN_REQUIREMENT = {
+  approved: "professional",
+};
+
+function statCard(iconKey, label, valueId, kind) {
+  const requiredTier = STAT_CARD_PLAN_REQUIREMENT[kind];
+  const isLocked = requiredTier && !planAtLeast(requiredTier);
+
+  if (isLocked) {
+    const tierLabel = PLAN_DISPLAY_NAMES[requiredTier] || requiredTier;
+    return `
+      <div class="stat-card clickable stat-card-locked" data-stat-kind="${kind}" role="button" tabindex="0">
+        <div class="stat-top">
+          <div>
+            <div class="stat-label">${label}</div>
+            <div class="stat-value-row">
+              <div class="stat-lock-icon" title="Available in the ${escapeHTML(tierLabel)} edition and above">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="stat-icon">
+            ${STAT_ICONS[iconKey]}
+          </div>
+        </div>
+        <div class="stat-hint stat-hint-locked">${escapeHTML(tierLabel)}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="stat-card clickable" data-stat-kind="${kind}" role="button" tabindex="0">
+      <div class="stat-top">
+        <div>
+          <div class="stat-label">${label}</div>
+          <div class="stat-value-row">
+            <div class="stat-value" id="${valueId}">—</div>
+          </div>
+        </div>
+        <div class="stat-icon">
+          ${STAT_ICONS[iconKey]}
+        </div>
+      </div>
+      <div class="stat-hint">View clients ›</div>
+    </div>
+  `;
+}
+function dashboardHTML() {
+  return `
+    <div class="page-head">
+      <h1>Dashboard</h1>
+      <p>A snapshot of client documents and firm activity.</p>
+    </div>
+
+    <div class="stat-row">
+      ${statCard("clients", "Total clients", "totalClients", "total")}
+      ${statCard("waiting", "Waiting on client", "waitingClients", "waiting")}
+      ${statCard("inprogress", "In progress", "inProgressClients", "inprogress")}
+      ${statCard("completed", "Completed clients", "completedClients", "completed")}
+      ${statCard("pending", "Pending documents", "pendingDocuments", "pending")}
+      ${statCard("received", "Received documents", "receivedDocuments", "received")}
+      ${statCard("approved", "Approved documents", "approvedDocuments", "approved")}
+    </div>
+
+    <div class="secondary-row">
+      ${planAtLeast("professional") ? `
+      <div class="panel">
+        <div class="panel-head"><span class="title">Recent activity</span></div>
+        <div class="table-empty">Connect the Activity workflow to see live document events here.</div>
+      </div>
+      ` : `
+      <div class="panel">
+        <div class="panel-head"><span class="title">Recent activity</span></div>
+        <div class="locked-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          A live activity feed is available in the Professional edition and above.
+        </div>
+      </div>
+      `}
+
+      ${planAtLeast("professional") ? `
+      <div class="panel">
+        <div class="panel-head"><span class="title">Upcoming reminders</span></div>
+        <div class="table-empty">Connect the Reminder workflow to see upcoming reminders here.</div>
+      </div>
+      ` : `
+      <div class="panel">
+        <div class="panel-head"><span class="title">Upcoming reminders</span></div>
+        <div class="locked-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Automatic reminders are available in the Professional edition and above.
+        </div>
+      </div>
+      `}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="title">Go to Client Profile</span></div>
+      <div class="panel-body" style="padding:20px;">
+        <p class="row-meta" style="margin-bottom:12px;">Search by client ID or name to view their full profile and document status.</p>
+        <div class="lookup-row" style="max-width:420px;">
+          <input id="dashboardClientSearch" class="lookup-input" type="text" placeholder="e.g. CLI-1783446728044 or client name" />
+          <button class="btn-primary" id="dashboardClientSearchBtn">Search</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+ 
+let charts = {};
+function destroyCharts() {
+  Object.values(charts).forEach(c => c && c.destroy());
+  charts = {};
+}
+
+function genericHTML(key) {
+  const meta = PAGE_META[key];
+  return `
+    <div class="page-head">
+      <h1>${meta.title}</h1>
+      <p>${meta.description}</p>
+    </div>
+    <div class="placeholder-panel">
+      <div class="placeholder-icon">${ICONS[key]}</div>
+      <div class="placeholder-title">${meta.title}</div>
+      <div class="placeholder-desc">${meta.description}</div>
+      <div class="placeholder-note">This section is under construction.</div>
+    </div>
+  `;
+}
+
+function escapeHTML(str) {
+  return String(str == null ? "" : str).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function upgradeRequiredHTML(key) {
+  const meta = PAGE_META[key];
+  const requiredTier = NAV_PLAN_REQUIREMENT[key];
+  const tierLabel = PLAN_DISPLAY_NAMES[requiredTier] || requiredTier;
+  return `
+    <div class="page-head">
+      <h1>${meta.title}</h1>
+      <p>${meta.description}</p>
+    </div>
+    <div class="placeholder-panel">
+      <div class="placeholder-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="placeholder-title">Upgrade to ${escapeHTML(tierLabel)}</div>
+      <div class="placeholder-desc">${escapeHTML(meta.title)} is available in the ${escapeHTML(tierLabel)} edition. Contact us to request an upgrade.</div>
+    </div>
+  `;
+}
+
+function renderContent() {
+  const content = document.getElementById("content");
+
+  const requiredTier = NAV_PLAN_REQUIREMENT[active];
+  if (requiredTier && !planAtLeast(requiredTier)) {
+    destroyCharts();
+    content.innerHTML = upgradeRequiredHTML(active);
+    return;
+  }
+
+  if (active === "clients") {
+    renderClientsSection();
+    return;
+  }
+  if (active === "templates") {
+    renderTemplatesSection();
+    if (!templatesFetched && !templatesLoading) loadTemplates();
+    return;
+  }
+  if (active === "uploads") {
+    destroyCharts();
+    content.innerHTML = linkGenHTML();
+    initLinkGenPanel();
+    return;
+  }
+  if (active === "license") {
+    destroyCharts();
+    content.innerHTML = licenseHTML();
+    initLicensePage();
+    return;
+  }
+  if (active === "settings") {
+    destroyCharts();
+    content.innerHTML = settingsHTML();
+    initSettingsPage();
+    return;
+  }
+  destroyCharts();
+  content.innerHTML = active === "dashboard" ? dashboardHTML() : genericHTML(active);
+  if (active === "dashboard") {
+    loadDashboard();
+    const dSearchBtn = document.getElementById("dashboardClientSearchBtn");
+    const dSearchInput = document.getElementById("dashboardClientSearch");
+    if (dSearchBtn && dSearchInput) {
+      const submit = () => searchClientAndNavigate(dSearchInput.value);
+      dSearchBtn.addEventListener("click", submit);
+      dSearchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    }
+    content.querySelectorAll(".stat-card[data-stat-kind]").forEach(card => {
+      const open = () => openStatBreakdown(card.dataset.statKind);
+      card.addEventListener("click", open);
+      card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
+  }
+}
+
+/* ============================================================
+   Dashboard stat breakdowns — click a stat card to see which
+   clients make up that number.
+
+   TODO: This assumes a "list all clients" webhook exists, returning
+   an array shaped like:
+     [{ clientId, name, email, status, pendingCount, receivedCount }, ...]
+   If your existing "Clients API" already returns something close to
+   this, point CLIENTS_LIST_API at it and adjust the field names in
+   STAT_BREAKDOWN_META below to match. Your current webhook/dashboard
+   endpoint only returns firm-wide totals, not a per-client breakdown,
+   so this can't be built from that alone.
+   ============================================================ */
+const CLIENTS_LIST_API = "https://nkpflow.app.n8n.cloud/webhook/clients-list";
+
+let clientsListCache = null;
+
+async function fetchClientsList(forceRefresh) {
+  if (clientsListCache && !forceRefresh) return clientsListCache;
+  const res = await authFetch(CLIENTS_LIST_API);
+  const data = await res.json();
+  const list = Array.isArray(data) ? data : (Array.isArray(data.clients) ? data.clients : []);
+  clientsListCache = list;
+  return list;
+}
+
+const STAT_BREAKDOWN_META = {
+  total: {
+    title: "All clients",
+    filter: () => true,
+    countLabel: null,
+  },
+  waiting: {
+    title: "Clients waiting on documents",
+    filter: c => Number(c.receivedCount || 0) === 0,
+    countLabel: null,
+  },
+  inprogress: {
+    title: "Clients in progress",
+    filter: c => Number(c.receivedCount || 0) > 0 && Number(c.pendingCount || 0) > 0,
+    countLabel: c => `${c.receivedCount} received, ${c.pendingCount} pending`,
+  },
+  completed: {
+    title: "Completed clients",
+    filter: c => Number(c.receivedCount || 0) > 0 && Number(c.pendingCount || 0) === 0,
+    countLabel: null,
+  },
+  pending: {
+    title: "Clients with pending documents",
+    filter: c => Number(c.pendingCount || 0) > 0,
+    countLabel: c => `${c.pendingCount} pending`,
+  },
+  received: {
+    title: "Clients with received documents",
+    filter: c => Number(c.receivedCount || 0) > 0,
+    countLabel: c => `${c.receivedCount} received`,
+  },
+  approved: {
+    title: "Clients with approved documents",
+    filter: c => Number(c.approvedCount || 0) > 0,
+    countLabel: c => `${c.approvedCount} approved`,
+  },
+};
+
+function closeStatBreakdown() {
+  const modalRoot = document.getElementById("modalRoot");
+  if (modalRoot) modalRoot.innerHTML = "";
+}
+
+async function openStatBreakdown(kind) {
+  const meta = STAT_BREAKDOWN_META[kind];
+  if (!meta) return;
+
+  if (!planAtLeast("professional")) {
+    const modalRoot = document.getElementById("modalRoot");
+    modalRoot.innerHTML = `
+      <div class="modal-overlay" id="statBreakdownOverlay">
+        <div class="modal-box" style="width:420px;">
+          <div class="modal-title">Upgrade to Professional</div>
+          <div class="modal-sub">Seeing which clients make up this number is available in the Professional edition and above.</div>
+          <div class="modal-footer">
+            <button class="btn-ghost" id="closeStatBreakdownBtn">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById("statBreakdownOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "statBreakdownOverlay") closeStatBreakdown();
+    });
+    document.getElementById("closeStatBreakdownBtn").addEventListener("click", closeStatBreakdown);
+    return;
+  }
+
+  const modalRoot = document.getElementById("modalRoot");
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="statBreakdownOverlay">
+      <div class="modal-box" style="width:480px; max-height:78vh; overflow-y:auto;">
+        <div class="modal-title">${escapeHTML(meta.title)}</div>
+        <div id="statBreakdownBody">
+          <div class="loading-spinner-row">Loading clients…</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="closeStatBreakdownBtn">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("statBreakdownOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "statBreakdownOverlay") closeStatBreakdown();
+  });
+  document.getElementById("closeStatBreakdownBtn").addEventListener("click", closeStatBreakdown);
+
+  try {
+    const list = await fetchClientsList();
+    const bodyEl = document.getElementById("statBreakdownBody");
+    if (!bodyEl) return; // modal was closed before the fetch resolved
+
+    const filtered = list.filter(meta.filter);
+    if (!filtered.length) {
+      bodyEl.innerHTML = `<div class="table-empty">No clients in this category yet.</div>`;
+      return;
+    }
+
+    bodyEl.innerHTML = filtered.map(c => `
+      <div class="doc-row" data-client-id="${escapeHTML(c.clientId || "")}" style="cursor:pointer;">
+        <div class="client-avatar">${initials(c.name)}</div>
+        <div style="flex:1; min-width:0;">
+          <div class="client-name">${escapeHTML(c.name || "Unknown")}</div>
+          <div class="client-email">${escapeHTML(c.email || "No email on file")}</div>
+        </div>
+        ${meta.countLabel ? `<span class="row-meta">${escapeHTML(meta.countLabel(c))}</span>` : ""}
+      </div>
+    `).join("");
+
+    bodyEl.querySelectorAll("[data-client-id]").forEach(row => {
+      row.addEventListener("click", () => {
+        const id = row.dataset.clientId;
+        closeStatBreakdown();
+        if (!id) return;
+        active = "clients";
+        renderNav();
+        document.getElementById("topbarTitle").textContent = PAGE_META[active].title;
+        openClientProfile(id);
+      });
+    });
+  } catch (err) {
+    const bodyEl = document.getElementById("statBreakdownBody");
+    if (bodyEl) bodyEl.innerHTML = `<div class="table-empty">We couldn't load this list. Please try again.</div>`;
+  }
+}
+
+/* ============================================================
+   Clients module — real API-backed client lookup + profile
+   ============================================================ */
+function initials(name) {
+  if (!name) return "?";
+  const parts = String(name).trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
+
+function toBadgeClass(status) {
+  const s = String(status || "").toLowerCase();
+  if (s === "received") return "received";
+  if (s === "verified" || s === "approved") return "verified";
+  if (s === "rejected") return "rejected";
+  if (s === "completed") return "completed";
+  if (s === "in progress" || s === "in-progress") return "in-progress";
+  if (s === "pending") return "pending";
+  return "neutral";
+}
+
+function badgeHTML(cssClass, label) {
+  return `<span class="badge ${cssClass}"><span class="badge-dot"></span>${escapeHTML(label)}</span>`;
+}
+
+function clientSearchScreenHTML() {
+  let resultsBlock = "";
+
+  if (clientSearchLoading) {
+    resultsBlock = `<div class="loading-spinner-row">Searching…</div>`;
+  } else if (clientSearchError) {
+    resultsBlock = `<div class="loading-spinner-row">${escapeHTML(clientSearchError)}</div>`;
+  } else if (clientSearchQuery && clientSearchResults.length === 0) {
+    resultsBlock = `<div class="loading-spinner-row">No clients found matching "${escapeHTML(clientSearchQuery)}". Try a different spelling, or search by their exact Client ID.</div>`;
+  } else if (clientSearchResults.length > 1) {
+    resultsBlock = clientSearchResults.map(c => `
+      <div class="doc-row" data-client-id="${escapeHTML(c.clientId || "")}" style="cursor:pointer;">
+        <div class="client-avatar">${initials(c.name)}</div>
+        <div style="flex:1; min-width:0;">
+          <div class="client-name">${escapeHTML(c.name || "Unknown")}</div>
+          <div class="client-email">${escapeHTML(c.email || "No email on file")} · ${escapeHTML(c.clientId || "—")}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  return `
+    <div class="page-head">
+      <h1>Clients</h1>
+      <p>Search by client name or ID to open their profile.</p>
+    </div>
+    <div class="panel lookup-card">
+      <label class="lookup-label" for="clientSearchInput">Client name or ID</label>
+      <div class="lookup-row">
+        <input id="clientSearchInput" class="lookup-input" type="text" placeholder="e.g. Kiran, or CLI-1783446728044" value="${escapeHTML(clientSearchQuery)}" />
+        <button class="btn-primary" id="clientSearchBtn">Search</button>
+      </div>
+      <div class="lookup-hint">If more than one client matches, you'll be able to pick the right one below.</div>
+    </div>
+    ${resultsBlock ? `
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-head"><span class="title">${clientSearchResults.length > 1 ? "Multiple matches" : "Search"}</span>${clientSearchResults.length > 1 ? `<span class="row-meta">${clientSearchResults.length} clients</span>` : ""}</div>
+      <div class="panel-body" id="clientResultsList">${resultsBlock}</div>
+    </div>
+    ` : ""}
+  `;
+}
+
+/* TODO: This assumes a "search clients by name" webhook exists at this
+   path, returning { clients: [{ clientId, name, email }, ...] }. If you
+   don't have this workflow yet, build a new n8n webhook that filters your
+   client Google Sheet by name (case-insensitive, partial match) and
+   returns that shape — your existing Client Details API only supports
+   exact-ID lookup and can't power name search on its own. */
+const CLIENTS_SEARCH_API = "http://localhost:3000/api/clients/search";
+const CLIENT_DETAIL_API = "http://localhost:3000/api/clients/client";
+
+async function performClientSearch(query) {
+  const q = (query || "").trim();
+  if (!q) return;
+
+  clientsView = "search";
+  clientSearchQuery = q;
+  clientSearchResults = [];
+  clientSearchLoading = true;
+  clientSearchError = null;
+  renderClientsSection();
+
+  try {
+    const res = await authFetch(`${CLIENTS_SEARCH_API}?name=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    const results = Array.isArray(data) ? data : (Array.isArray(data.clients) ? data.clients : []);
+    clientSearchResults = results;
+
+    if (results.length === 1 && results[0].clientId) {
+      openClientProfile(results[0].clientId);
+      return;
+    }
+  } catch (err) {
+    clientSearchError = "We couldn't search for clients. Please try again.";
+  } finally {
+    clientSearchLoading = false;
+    if (clientsView === "search") renderClientsSection();
+  }
+}
+
+async function openClientProfile(id) {
+  clientsView = "profile";
+  clientLoading = true;
+  clientLoadError = null;
+  selectedClient = null;
+  selectedDocuments = [];
+  selectedActivities = [];
+  activityLoading = true;
+  activityLoadError = null;
+  renderClientsSection();
+
+  const url = `https://nkpflow.app.n8n.cloud/webhook/client?id=${encodeURIComponent(id)}`;
+  console.log("[FinanceDocs] Fetching client profile from:", url);
+
+  try {
+    const response = await authFetch(url);
+    const data = await response.json();
+    console.log("[FinanceDocs] Requested ID:", id, "→ API returned clientId:", data && data.client && data.client.clientId);
+
+    if (!data || data.success === false || !data.client) {
+      throw new Error("Client not found.");
+    }
+
+    selectedClient = data.client;
+    selectedDocuments = Array.isArray(data.documents) ? data.documents : [];
+  } catch (err) {
+    clientLoadError = "We couldn't load this client. Please check the Client ID and try again.";
+  } finally {
+    clientLoading = false;
+    renderClientsSection();
+  }
+
+  // Fetched separately from the Client Details call above — a slow or
+  // failed Activity API should never hold up the rest of the profile.
+  loadClientActivity(id);
+}
+
+async function loadClientActivity(id) {
+  const token = ++activityRequestToken;
+  const url = `https://nkpflow.app.n8n.cloud/webhook/activity?client=${encodeURIComponent(id)}`;
+  console.log("[FinanceDocs] Fetching activity timeline from:", url);
+
+  try {
+    const res = await authFetch(url);
+    const data = await res.json();
+
+    if (!data || data.success === false) {
+      throw new Error("Activity request failed.");
+    }
+
+    const activities = Array.isArray(data.activities) ? data.activities.slice() : [];
+    // Newest first.
+    activities.sort((a, b) => new Date(b["Date & Time"]) - new Date(a["Date & Time"]));
+
+    if (token !== activityRequestToken) return; // superseded by a newer request
+    selectedActivities = activities;
+    activityLoadError = null;
+  } catch (err) {
+    if (token !== activityRequestToken) return;
+    activityLoadError = "Unable to load activity timeline.";
+  } finally {
+    if (token === activityRequestToken) {
+      activityLoading = false;
+      renderClientsSection();
+    }
+  }
+}
+
+function backToClientsList() {
+  activityRequestToken++; // invalidate any in-flight activity fetch
+  clientsView = "search";
+  selectedClient = null;
+  selectedDocuments = [];
+  selectedActivities = [];
+  activityLoading = false;
+  activityLoadError = null;
+  clientLoadError = null;
+  renderClientsSection();
+}
+
+function overallProgressHTML(pct) {
+  const safePct = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
+  return `
+    <div class="panel overall-progress-panel">
+      <div class="overall-progress-top">
+        <span class="lbl">Onboarding progress</span>
+        <span class="pct">${safePct}%</span>
+      </div>
+      <div class="stage-seg"><div class="fill" style="width:${safePct}%"></div></div>
+    </div>
+  `;
+}
+
+// Shared lock glyph — same icon everywhere a Basic-edition action is
+// gated behind the Professional upgrade (View, Approve, Reupload, and
+// the bulk "Request re-upload for all" button).
+function lockIconHTML(size) {
+  const s = size || 12;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+}
+
+// Display-only — Client Information fields show a muted "Not provided"
+// instead of a bare "—" when the API returns nothing for that field.
+function detailValueHTML(value) {
+  if (value === undefined || value === null || value === "") {
+    return `<span class="detail-value-empty">Not provided</span>`;
+  }
+  return escapeHTML(value);
+}
+
+// Display-only date formatter — mirrors the pattern used on the License
+// page (dateFmt in loadLicenseStatus). Falls back to the raw string for
+// anything Date can't parse, so unusual API formats never disappear.
+function formatDocDate(raw) {
+  if (!raw) return "";
+  const parsed = new Date(raw);
+  return isNaN(parsed) ? escapeHTML(raw) : parsed.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function documentsListHTML(docs) {
+  if (!docs || !docs.length) {
+    return `<div class="table-empty">No documents found for this client.</div>`;
+  }
+  return docs.map((d, i) => {
+    const isReceived = String(d.status || "").toLowerCase() === "received";
+    const hasFileLink = !!(d.fileUrl || d.driveFileLink || d.fileLink);
+    const fileLink = d.fileUrl || d.driveFileLink || d.fileLink || "";
+    const canViewFile = planAtLeast("professional");
+
+    // Same three states as before (locked / linked / on-record-no-link),
+    // just presented as a "View" button instead of inline filename text.
+    // The locked state reuses the existing openUpgradeModal("professional")
+    // dialog via the same [data-upgrade-tier] pattern used on the License page.
+    const viewBtn = !isReceived
+      ? ""
+      : !canViewFile
+        ? `<button type="button" class="btn-view locked" data-upgrade-tier="professional" data-upgrade-reason="view" title="Viewing uploaded documents is available in the Professional edition">View ${lockIconHTML(12)}</button>`
+        : hasFileLink
+          ? `<a href="${escapeHTML(fileLink)}" target="_blank" rel="noopener" class="btn-view">View</a>`
+          : `<button type="button" class="btn-view" disabled title="No direct file link yet — add one to your Client Details API response">View</button>`;
+
+    // No raw system filenames (e.g. "CLI-...-Government ID.pdf") — just a
+    // clean one-line summary of upload + verification state.
+    const metaParts = [];
+    if (isReceived) metaParts.push("File uploaded");
+    if (d.uploadDate) metaParts.push("Uploaded: " + formatDocDate(d.uploadDate));
+    if (d.verifiedBy) metaParts.push("Verified: " + escapeHTML(d.verifiedBy));
+    const metaLine = metaParts.length ? metaParts.join(" &middot; ") : "No file uploaded yet";
+
+    // Approve / Reupload follow the same Basic-vs-Professional split as View:
+    // on Basic they're locked (lock icon + upgrade dialog), on Professional+
+    // they keep their exact original wiring into the doc-reminder-btn delegate.
+    const actionBtn = isReceived
+      ? (canViewFile
+          ? `<button class="btn-approve doc-reminder-btn" data-doc="${escapeHTML(d.document || "")}" data-mode="approve" title="Approve this document">Approve</button>
+             <button class="btn-ghost doc-reminder-btn" data-doc="${escapeHTML(d.document || "")}" data-mode="reupload" title="Send a reupload request">Reupload</button>`
+          : `<button type="button" class="btn-approve locked" data-upgrade-tier="professional" data-upgrade-reason="approve" title="Approving documents is available in the Professional edition">Approve ${lockIconHTML(12)}</button>
+             <button type="button" class="btn-ghost locked" data-upgrade-tier="professional" data-upgrade-reason="reupload" title="Re-upload requests are available in the Professional edition">Reupload ${lockIconHTML(12)}</button>`)
+      : `<button class="btn-ghost doc-reminder-btn" data-doc="${escapeHTML(d.document || "")}" data-mode="reminder" title="Send a reminder for this document">Remind</button>`;
+
+    return `
+    <div class="doc-row doc-card" data-doc-row="${i}">
+      <div class="doc-card-top">
+        <div class="doc-card-title-wrap">
+          <div class="doc-card-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          </div>
+          <div class="doc-card-title">${escapeHTML(d.document || "Untitled document")}</div>
+        </div>
+        ${badgeHTML(toBadgeClass(d.status), d.status || "Unknown")}
+      </div>
+      <div class="doc-card-meta">${metaLine}</div>
+      <div class="doc-card-actions">
+        ${viewBtn}
+        ${actionBtn}
+      </div>
+    </div>
+    <div class="doc-row-feedback" id="docRowFeedback-${i}"></div>
+  `;
+  }).join("");
+}
+
+function aiVerificationHTML(docs) {
+  if (!docs || !docs.length) return `<div class="table-empty">No verification data available.</div>`;
+  return docs.map(d => {
+    const mapped = d.status === "Received" ? "verified" : "pending";
+    const label = d.status === "Received" ? "Verified" : "Pending";
+    return `
+      <div class="verify-row">
+        <div class="verify-icon ${mapped}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div class="verify-body">
+          <div class="verify-name">${escapeHTML(d.document || "Untitled document")}</div>
+          ${d.verifiedBy ? `<div class="verify-note">Verified by ${escapeHTML(d.verifiedBy)}</div>` : ""}
+        </div>
+        ${badgeHTML(mapped, label)}
+      </div>
+    `;
+  }).join("");
+}
+
+function reminderHistoryPanelHTML(c) {
+  if (!planAtLeast("professional")) {
+    return `
+      <div class="panel client-card">
+        <div class="panel-head"><span class="title">Reminder history</span></div>
+        <div class="locked-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Automatic reminders are available in the Professional edition and above.
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="panel client-card">
+      <div class="panel-head"><span class="title">Reminder history</span></div>
+      <div class="reminder-summary-row">Reminders sent: <strong>${c.reminderCount ?? 0}</strong></div>
+      <div class="table-empty">No reminder history available.</div>
+    </div>
+  `;
+}
+
+// Small icon + color class per activity type — falls back to a neutral
+// bullet/gray style for any type the Activity API adds later that this
+// list doesn't know about yet.
+const ACTIVITY_TYPE_STYLES = {
+  CLIENT_CREATED: { icon: "👤", cls: "type-created" },
+  DOCUMENT_UPLOADED: { icon: "📄", cls: "type-uploaded" },
+  DOCUMENT_APPROVED: { icon: "✅", cls: "type-approved" },
+  REUPLOAD_REQUESTED: { icon: "🔄", cls: "type-reupload" },
+  REMINDER_SENT: { icon: "🔔", cls: "type-reminder" },
+  AI_VERIFIED: { icon: "🤖", cls: "type-ai" },
+  SYSTEM: { icon: "⚙️", cls: "type-system" },
+};
+
+// Display-only date formatter for "Date & Time" — mirrors formatDocDate,
+// just with a time component added for the audit-trail timestamp.
+function formatActivityDateTime(raw) {
+  if (!raw) return "";
+  const parsed = new Date(raw);
+  if (isNaN(parsed)) return escapeHTML(raw);
+  const datePart = parsed.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const timePart = parsed.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return `${datePart} &middot; ${timePart}`;
+}
+
+function activityTimelineSkeletonHTML() {
+  return `
+    <div class="activity-timeline">
+      ${[0, 1, 2].map(() => `
+        <div class="activity-item">
+          <div class="activity-icon activity-skeleton-icon"></div>
+          <div class="activity-body">
+            <div class="activity-skeleton-line" style="width:65%;"></div>
+            <div class="activity-skeleton-line" style="width:40%; height:10px; margin-top:8px;"></div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function activityTimelineHTML() {
+  if (activityLoading) {
+    return activityTimelineSkeletonHTML();
+  }
+  if (activityLoadError) {
+    return `<div class="table-empty">${escapeHTML(activityLoadError)}</div>`;
+  }
+  if (!selectedActivities.length) {
+    return `<div class="table-empty">No activity available.</div>`;
+  }
+
+  return `
+    <div class="activity-timeline">
+      ${selectedActivities.map((a, i) => {
+        const style = ACTIVITY_TYPE_STYLES[a["Activity Type"]] || { icon: "•", cls: "type-created" };
+        const description = a.Description || a["Activity Type"] || "Activity";
+        const performedBy = a["Performed By"] || "—";
+        const when = formatActivityDateTime(a["Date & Time"]);
+        const delayMs = Math.min(i * 40, 240);
+        return `
+          <div class="activity-item" style="animation-delay:${delayMs}ms;">
+            <div class="activity-icon ${style.cls}" title="${escapeHTML(a["Activity Type"] || "")}">${style.icon}</div>
+            <div class="activity-body">
+              <div class="activity-desc">${escapeHTML(description)}</div>
+              <div class="activity-meta">${escapeHTML(performedBy)}${when ? ` <span class="dot-sep">&middot;</span> ${when}` : ""}</div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function clientProfileHTML() {
+  const backBtn = `
+    <button class="back-link" id="backToClientsBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Back to clients
+    </button>
+  `;
+
+  if (clientLoading) {
+    return `${backBtn}<div class="panel"><div class="loading-spinner-row">Loading client…</div></div>`;
+  }
+  if (clientLoadError) {
+    return `${backBtn}<div class="panel"><div class="loading-spinner-row">${escapeHTML(clientLoadError)}</div></div>`;
+  }
+  const c = selectedClient;
+  if (!c) {
+    return `${backBtn}<div class="panel"><div class="loading-spinner-row">No client loaded.</div></div>`;
+  }
+
+  const portalLink = c.clientId
+    ? `${appSettings.clientPortalBaseUrl}?client=${encodeURIComponent(c.clientId)}${c.accessToken ? `&token=${encodeURIComponent(c.accessToken)}` : ""}`
+    : "";
+
+  return `
+    ${backBtn}
+    <div class="panel client-card profile-header">
+      <div class="profile-header-top">
+        <div class="profile-avatar">${initials(c.name)}</div>
+        <div class="profile-id">
+          <h2>${escapeHTML(c.name || "—")}</h2>
+          <div class="sub">${escapeHTML(c.email || "—")} · ${escapeHTML(c.phone || "—")}</div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="lbl">Status</div><div class="val">${badgeHTML(toBadgeClass(c.status), c.status || "—")}</div></div>
+          <div class="profile-stat"><div class="lbl">Progress</div><div class="val">${escapeHTML(c.progress || "—")}</div></div>
+          ${planAtLeast("professional") ? `<div class="profile-stat"><div class="lbl">Reminders</div><div class="val">${c.reminderCount ?? 0}</div></div>` : ""}
+        </div>
+      </div>
+      <div class="profile-header-actions">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          ${portalLink ? `<button class="btn-secondary" id="copyProfileLinkBtn" data-link="${escapeHTML(portalLink)}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy upload link
+          </button>` : ""}
+          <a class="btn-secondary" href="${c.folderLink || "#"}" target="_blank" rel="noopener" ${!c.folderLink ? 'style="opacity:.5; pointer-events:none;"' : ""}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v2"/><path d="M2 13.5V20a2 2 0 0 0 2 2h13.5"/></svg>
+            Open Google Drive Folder
+          </a>
+          <button class="btn-secondary" id="sendReminderBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            Send reminder
+          </button>
+        </div>
+        <div class="copy-feedback" id="reminderBtnFeedback"></div>
+      </div>
+    </div>
+
+    ${overallProgressHTML(c.progressPercentage)}
+
+    <div class="profile-grid">
+      <div>
+        <div class="panel client-card" style="margin-bottom:14px;">
+          <div class="panel-head"><span class="title">Client information</span></div>
+          <div class="detail-list">
+            <div class="detail-row"><span class="detail-label">Client ID</span><span class="detail-value">${detailValueHTML(c.clientId)}</span></div>
+            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${detailValueHTML(c.email)}</span></div>
+            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${detailValueHTML(c.phone)}</span></div>
+            <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${detailValueHTML(c.address)}</span></div>
+            <div class="detail-row"><span class="detail-label">Advisor</span><span class="detail-value">${detailValueHTML(c.advisor)}</span></div>
+            <div class="detail-row"><span class="detail-label">Template</span><span class="detail-value">${detailValueHTML(c.template)}</span></div>
+            <div class="detail-row"><span class="detail-label">Onboarding date</span><span class="detail-value">${detailValueHTML(c.onboardingDate)}</span></div>
+            ${planAtLeast("professional") ? `<div class="detail-row"><span class="detail-label">Reminder count</span><span class="detail-value">${c.reminderCount ?? 0}</span></div>` : ""}
+          </div>
+        </div>
+
+        <div class="panel client-card" style="margin-bottom:14px;">
+          <div class="panel-head">
+            <span class="title">Required documents</span>
+            ${selectedDocuments.some(d => String(d.status || "").toLowerCase() === "received") ? `
+            <button class="btn-ghost${!planAtLeast("professional") ? " locked" : ""}" id="bulkReuploadBtn" style="font-size:12px; padding:6px 10px;" ${!planAtLeast("professional") ? `data-upgrade-tier="professional" data-upgrade-reason="bulkReupload" title="Available in the Professional edition"` : ""}>Request re-upload for all${!planAtLeast("professional") ? ` ${lockIconHTML(12)}` : ""}</button>
+            ` : ""}
+          </div>
+          <div class="doc-list">${documentsListHTML(selectedDocuments)}</div>
+          <div class="copy-feedback" id="bulkReuploadFeedback" style="padding:0 14px 12px;"></div>
+        </div>
+
+        ${reminderHistoryPanelHTML(c)}
+      </div>
+
+      <div>
+        ${planAtLeast("premium") ? `
+        <div class="panel client-card" style="margin-bottom:14px;">
+          <div class="panel-head"><span class="title">AI verification results</span></div>
+          <div>${aiVerificationHTML(selectedDocuments)}</div>
+        </div>
+        ` : `
+        <div class="panel client-card" style="margin-bottom:14px;">
+          <div class="panel-head"><span class="title">AI verification results</span></div>
+          <button type="button" class="locked-note locked-note-btn" data-upgrade-tier="premium" data-upgrade-reason="ai" title="AI-powered document verification is available in the Premium edition">
+            ${lockIconHTML(14)}
+            <span>AI-powered document verification is available in the Premium edition. <span class="locked-note-cta">Upgrade to Premium →</span></span>
+          </button>
+        </div>
+        `}
+
+        <div class="panel client-card">
+          <div class="panel-head"><span class="title">Activity timeline</span></div>
+          ${activityTimelineHTML()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function flashFeedback(el, text, color, duration) {
+  if (!el) return;
+  if (el._gateMessageTimeout) {
+    clearTimeout(el._gateMessageTimeout);
+    el._gateMessageTimeout = null;
+  }
+  el.textContent = text;
+  el.style.color = color;
+  el._gateMessageTimeout = setTimeout(() => {
+    el.textContent = "";
+    el._gateMessageTimeout = null;
+  }, duration || 5000);
+}
+
+function setReminderGateMessage(el, requiredTier, unlockedMessage) {
+  if (!planAtLeast(requiredTier)) {
+    const tierLabel = PLAN_DISPLAY_NAMES[requiredTier] || requiredTier;
+    flashFeedback(el, `Upgrade to the ${tierLabel} edition to use this.`, "var(--amber)");
+  } else {
+    flashFeedback(el, unlockedMessage, "var(--ink-3)");
+  }
+}
+
+function renderClientsSection() {
+  const content = document.getElementById("content");
+  destroyCharts();
+  content.innerHTML = clientsView === "profile" ? clientProfileHTML() : clientSearchScreenHTML();
+
+  if (clientsView === "profile") {
+    const backBtn = document.getElementById("backToClientsBtn");
+    if (backBtn) backBtn.addEventListener("click", backToClientsList);
+    const copyBtn = document.getElementById("copyProfileLinkBtn");
+    if (copyBtn) copyBtn.addEventListener("click", () => copyTextWithFeedback(copyBtn.dataset.link, copyBtn));
+
+    const reminderBtn = document.getElementById("sendReminderBtn");
+    const reminderFeedback = document.getElementById("reminderBtnFeedback");
+    if (reminderBtn && reminderFeedback) {
+      reminderBtn.addEventListener("click", () => {
+        setReminderGateMessage(reminderFeedback, "professional", "Reminder sending isn't connected yet — hook this button up to your Reminder workflow.");
+      });
+    }
+
+    const bulkBtn = document.getElementById("bulkReuploadBtn");
+    const bulkFeedback = document.getElementById("bulkReuploadFeedback");
+    if (bulkBtn && bulkFeedback && !bulkBtn.dataset.upgradeTier) {
+      bulkBtn.addEventListener("click", () => {
+        setReminderGateMessage(bulkFeedback, "professional", "Bulk re-upload requests aren't connected yet — hook this button up to your Reminder workflow.");
+      });
+    }
+
+    const docList = document.querySelector(".doc-list");
+    if (docList) {
+      docList.addEventListener("click", (e) => {
+        const btn = e.target.closest(".doc-reminder-btn");
+        if (!btn) return;
+        const row = btn.closest(".doc-row[data-doc-row]");
+        const idx = row ? row.dataset.docRow : null;
+        const feedbackEl = idx !== null ? document.getElementById(`docRowFeedback-${idx}`) : null;
+        if (!feedbackEl) return;
+
+        if (btn.dataset.mode === "approve") {
+          setReminderGateMessage(feedbackEl, "professional", "Document approval isn't connected yet — hook this button up to your workflow.");
+          return;
+        }
+
+        const message = btn.dataset.mode === "reupload"
+          ? "Re-upload requests aren't connected yet — hook this button up to your Reminder workflow."
+          : "Per-document reminders aren't connected yet — hook this button up to your Reminder workflow.";
+        setReminderGateMessage(feedbackEl, "professional", message);
+      });
+    }
+
+    // Wire every locked Professional/Premium action on this page (View,
+    // Approve, Reupload, bulk reupload, AI verification panel) to the same
+    // upgrade dialog, each carrying its own contextual reason message.
+    document.querySelectorAll("[data-upgrade-tier]").forEach(btn => {
+      btn.addEventListener("click", () => openUpgradeModal(btn.dataset.upgradeTier, btn.dataset.upgradeReason));
+    });
+  } else {
+    const input = document.getElementById("clientSearchInput");
+    const btn = document.getElementById("clientSearchBtn");
+    const submit = () => performClientSearch(input.value);
+    btn.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submit();
+    });
+
+    const resultsList = document.getElementById("clientResultsList");
+    if (resultsList) {
+      resultsList.addEventListener("click", (e) => {
+        const row = e.target.closest("[data-client-id]");
+        if (row && row.dataset.clientId) {
+          console.log("[FinanceDocs] Row clicked → requesting client:", row.dataset.clientId);
+          openClientProfile(row.dataset.clientId);
+        }
+      });
+    }
+  }
+}
+
+/* ============================================================
+   Document Templates module — real API-backed template manager
+   ============================================================ */
+function uid(prefix) { return prefix + "_" + Math.random().toString(36).slice(2, 9); }
+
+let apiTemplates = [];
+let templatesLoading = false;
+let templatesLoadError = null;
+let templatesFetched = false;
+
+let templatesView = "list";
+let selectedTemplateId = null;
+
+const TEMPLATES_API_URL = "https://nkpflow.app.n8n.cloud/webhook/templates";
+
+const TEMPLATE_ICON = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>';
+
+/* Transform an API template object into the shape the UI expects:
+   { id, name, description, updated, documents: [{ id, name, required }] } */
+function transformApiTemplate(apiT) {
+  const rawDocs = Array.isArray(apiT.documents) ? apiT.documents.slice() : [];
+  rawDocs.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  return {
+    id: apiT.id || apiT.templateId || slugify(apiT.templateName || apiT.name) || uid("t"),
+    name: apiT.templateName || apiT.name || "Untitled template",
+    description: apiT.description || "",
+    updated: apiT.updated || apiT.updatedAt || "—",
+    documents: rawDocs.map(d => ({
+      id: d.id || uid("d"),
+      name: d.name || "Untitled document",
+      required: d.required === "Yes" || d.required === true || d.required === "true",
+      order: d.order,
+      description: d.description || "",
+      acceptedFileTypes: d.acceptedFileTypes || "",
+      maxFileSize: d.maxFileSize,
+    })),
+  };
+}
+
+function slugify(str) {
+  if (!str) return "";
+  return "t_" + str.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+async function loadTemplates() {
+  templatesLoading = true;
+  templatesLoadError = null;
+  renderTemplatesSection();
+
+  try {
+    const response = await authFetch(TEMPLATES_API_URL);
+    const data = await response.json();
+    const list = Array.isArray(data) ? data : (Array.isArray(data.templates) ? data.templates : null);
+
+    if (!list) throw new Error("Unexpected response shape from templates API.");
+
+    apiTemplates = list.map(transformApiTemplate);
+  } catch (err) {
+    templatesLoadError = "We couldn't load your document templates. Please try again.";
+    apiTemplates = [];
+  } finally {
+    templatesLoading = false;
+    templatesFetched = true;
+    renderTemplatesSection();
+  }
+}
+
+function templateCardHTML(t) {
+  const requiredCount = t.documents.filter(d => d.required).length;
+  return `
+    <div class="template-card" data-template-id="${t.id}">
+      <div class="template-card-top">
+        <div class="template-icon">${TEMPLATE_ICON}</div>
+        <div class="template-actions">
+          <button class="icon-action-btn" data-action="edit" data-template-id="${t.id}" title="Edit template">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          </button>
+          <button class="icon-action-btn danger" data-action="delete" data-template-id="${t.id}" title="Delete template">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <div class="template-name">${escapeHTML(t.name)}</div>
+        <div class="template-desc">${escapeHTML(t.description)}</div>
+      </div>
+      <div class="template-meta-row">
+        <span>${t.documents.length} documents · ${requiredCount} required</span>
+        <span>Updated ${escapeHTML(t.updated)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function templatesListHTML() {
+  let gridOrState;
+  if (templatesLoading) {
+    gridOrState = `<div class="table-empty">Loading templates…</div>`;
+  } else if (templatesLoadError) {
+    gridOrState = `<div class="table-empty">${escapeHTML(templatesLoadError)}</div>`;
+  } else {
+    gridOrState = `
+      <div class="template-grid" id="templateGrid">
+        ${apiTemplates.map(templateCardHTML).join("")}
+        <div class="template-card add-card" id="newTemplateCard">
+          <div class="add-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </div>
+          <span>New template</span>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="page-head">
+      <h1>Document templates</h1>
+      <p>Build and version the intake, disclosure, and compliance templates your firm sends to clients.</p>
+    </div>
+    ${gridOrState}
+  `;
+}
+
+function docEditorRowHTML(doc) {
+  return `
+    <div class="doc-editor-row" data-doc-id="${doc.id}">
+      <span class="doc-drag">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+      </span>
+      <input class="doc-name-input" type="text" value="${escapeHTML(doc.name)}" placeholder="Untitled document" />
+      <div class="doc-required-wrap">
+        <span class="doc-required-label">Required</span>
+        <label class="toggle-switch">
+          <input type="checkbox" class="doc-required-checkbox" ${doc.required ? "checked" : ""} />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <button class="doc-remove-btn" title="Remove document">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function templateEditorHTML(id) {
+  const t = apiTemplates.find(x => x.id === id);
+  if (!t) return `<div class="page-head"><p>Template not found.</p></div>`;
+  return `
+    <button class="back-link" id="backToTemplatesBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Back to templates
+    </button>
+
+    <div class="panel" style="padding:20px; margin-bottom:14px;">
+      <input class="editor-title-input" id="templateNameInput" type="text" value="${escapeHTML(t.name)}" placeholder="Untitled template" />
+      <input class="editor-desc-input" id="templateDescInput" type="text" value="${escapeHTML(t.description)}" placeholder="Add a short description…" />
+      <div class="editor-meta-row"><span id="docCountLabel">${t.documents.length} documents</span><span>·</span><span>Last updated ${escapeHTML(t.updated)}</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="title">Documents</span>
+        <button class="btn-primary" id="addDocumentBtn" style="padding:7px 12px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          Add document
+        </button>
+      </div>
+      <div id="docRowsContainer">
+        ${t.documents.map(docEditorRowHTML).join("")}
+      </div>
+      <div class="add-doc-footer">
+        <span class="row-meta">Documents can be reordered, renamed, or marked required at any time.</span>
+      </div>
+    </div>
+  `;
+}
+
+function updateDocCountLabel(t) {
+  const el = document.getElementById("docCountLabel");
+  if (el) el.textContent = `${t.documents.length} document${t.documents.length === 1 ? "" : "s"}`;
+}
+
+function openTemplateEditor(id) {
+  selectedTemplateId = id;
+  templatesView = "editor";
+  renderTemplatesSection();
+}
+
+function backToTemplatesList() {
+  templatesView = "list";
+  selectedTemplateId = null;
+  renderTemplatesSection();
+}
+
+function deleteTemplate(id) {
+  const t = apiTemplates.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm(`Delete "${t.name}"? This cannot be undone.`)) return;
+  apiTemplates = apiTemplates.filter(x => x.id !== id);
+  renderTemplatesSection();
+}
+
+function openNewTemplateModal() {
+  const modalRoot = document.getElementById("modalRoot");
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="newTemplateOverlay">
+      <div class="modal-box">
+        <div class="modal-title">New template</div>
+        <div class="modal-sub">Give your template a name and description. You can add documents next.</div>
+        <div class="form-group">
+          <label class="form-label">Template name</label>
+          <input class="form-input" id="newTemplateName" type="text" placeholder="e.g. Estate Planning Onboarding" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="newTemplateDesc" placeholder="What is this template used for?"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="cancelNewTemplate">Cancel</button>
+          <button class="btn-primary" id="createNewTemplate">Create template</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("newTemplateOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "newTemplateOverlay") closeNewTemplateModal();
+  });
+  document.getElementById("cancelNewTemplate").addEventListener("click", closeNewTemplateModal);
+  document.getElementById("createNewTemplate").addEventListener("click", () => {
+    const name = document.getElementById("newTemplateName").value.trim() || "Untitled template";
+    const description = document.getElementById("newTemplateDesc").value.trim() || "No description yet.";
+    const newTemplate = {
+      id: uid("t"), name, description,
+      updated: "Just now",
+      documents: [],
+    };
+    apiTemplates.push(newTemplate);
+    closeNewTemplateModal();
+    openTemplateEditor(newTemplate.id);
+  });
+  document.getElementById("newTemplateName").focus();
+}
+
+function closeNewTemplateModal() {
+  document.getElementById("modalRoot").innerHTML = "";
+}
+
+function renderTemplatesSection() {
+  const content = document.getElementById("content");
+  destroyCharts();
+  content.innerHTML = templatesView === "list" ? templatesListHTML() : templateEditorHTML(selectedTemplateId);
+
+  if (templatesView === "list") {
+    const newCard = document.getElementById("newTemplateCard");
+    if (newCard) newCard.addEventListener("click", openNewTemplateModal);
+    const grid = document.getElementById("templateGrid");
+    if (grid) grid.addEventListener("click", (e) => {
+      const actionBtn = e.target.closest("[data-action]");
+      if (actionBtn) {
+        const tid = actionBtn.dataset.templateId;
+        if (actionBtn.dataset.action === "edit") openTemplateEditor(tid);
+        if (actionBtn.dataset.action === "delete") deleteTemplate(tid);
+        return;
+      }
+      const card = e.target.closest(".template-card[data-template-id]");
+      if (card) openTemplateEditor(card.dataset.templateId);
+    });
+  } else {
+    const t = apiTemplates.find(x => x.id === selectedTemplateId);
+    if (!t) return;
+
+    document.getElementById("backToTemplatesBtn").addEventListener("click", backToTemplatesList);
+    document.getElementById("templateNameInput").addEventListener("input", (e) => { t.name = e.target.value; });
+    document.getElementById("templateDescInput").addEventListener("input", (e) => { t.description = e.target.value; });
+
+    const container = document.getElementById("docRowsContainer");
+    container.addEventListener("input", (e) => {
+      if (e.target.classList.contains("doc-name-input")) {
+        const row = e.target.closest(".doc-editor-row");
+        const doc = t.documents.find(d => d.id === row.dataset.docId);
+        if (doc) doc.name = e.target.value;
+      }
+    });
+    container.addEventListener("change", (e) => {
+      if (e.target.classList.contains("doc-required-checkbox")) {
+        const row = e.target.closest(".doc-editor-row");
+        const doc = t.documents.find(d => d.id === row.dataset.docId);
+        if (doc) doc.required = e.target.checked;
+      }
+    });
+    container.addEventListener("click", (e) => {
+      const btn = e.target.closest(".doc-remove-btn");
+      if (!btn) return;
+      const row = btn.closest(".doc-editor-row");
+      const docId = row.dataset.docId;
+      t.documents = t.documents.filter(d => d.id !== docId);
+      row.remove();
+      updateDocCountLabel(t);
+    });
+
+    document.getElementById("addDocumentBtn").addEventListener("click", () => {
+      const newDoc = { id: uid("d"), name: "", required: false };
+      t.documents.push(newDoc);
+      container.insertAdjacentHTML("beforeend", docEditorRowHTML(newDoc));
+      updateDocCountLabel(t);
+      const newInput = container.querySelector(`[data-doc-id="${newDoc.id}"] .doc-name-input`);
+      if (newInput) newInput.focus();
+    });
+  }
+}
+
+/* ============================================================
+   Upload Portal nav section → Generate Client Link panel.
+   Clients no longer upload on this dashboard; they use the
+   separate, standalone docflow-client-portal.html file.
+   ============================================================ */
+// The portal link base URL is configurable on the Settings page.
+// Falls back to a placeholder until an advisor sets it there.
+
+/* Persisted across nav switches, same as clientsView/templatesView do for
+   their sections — so leaving this page and coming back doesn't wipe out
+   a search or generated link the advisor was in the middle of using. */
+let linkGenQuery = "";
+let linkGenMatches = null;      // null = no search performed yet; [] = zero results; [..] = multiple matches
+let linkGenLink = "";           // generated portal link, once a client is chosen
+let linkGenEmailHref = "";
+let linkGenWhatsappHref = "";
+let linkGenNoPhone = false;
+
+function linkGenHTML() {
+  return `
+    <div class="panel link-gen-card" style="max-width:520px;">
+      <label class="lookup-label" for="linkClientSearchInput">Client name or ID</label>
+      <div class="lookup-row">
+        <input id="linkClientSearchInput" class="lookup-input" type="text" placeholder="e.g. Kiran, or CLI-1783446728044" value="${escapeHTML(linkGenQuery)}" />
+        <button class="btn-primary" id="linkClientSearchBtn">Find client</button>
+      </div>
+      <div class="lookup-hint">If more than one client matches, you'll be able to pick the right one below.</div>
+      <div id="linkGenResultsArea"></div>
+      <div class="link-output-row" id="linkOutputRow" style="display:none;">
+        <input id="linkOutputInput" class="link-output-input" type="text" readonly />
+        <button class="btn-secondary" id="copyLinkBtn">Copy</button>
+      </div>
+      <div class="share-btn-row" id="shareBtnRow" style="display:none;">
+        <a class="btn-secondary" id="emailShareBtn" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Send via Email
+        </a>
+        <a class="btn-secondary" id="whatsappShareBtn" href="#" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65-4.95A9 9 0 1 1 8.5 19.5z"/><path d="M8.5 12.5a1 1 0 0 0 1.5.8l1-1a5.5 5.5 0 0 0 3.7 3.7l1-1a1 1 0 0 0 .8 1.5c0 1.5-1.5 2.5-3 2.5a7 7 0 0 1-7-7c0-1.5 1-3 2.5-3a1 1 0 0 0 1.5.8"/></svg>
+          Send via WhatsApp
+        </a>
+      </div>
+      <div class="copy-feedback" id="copyFeedback"></div>
+    </div>
+  `;
+}
+
+async function copyTextWithFeedback(text, triggerBtn) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    // Clipboard API unavailable — fall back silently, button still shows "Copied" is skipped
+  }
+  const original = triggerBtn.textContent;
+  triggerBtn.textContent = "Copied!";
+  setTimeout(() => { triggerBtn.textContent = original; }, 1800);
+}
+
+function initLinkGenPanel() {
+  const input = document.getElementById("linkClientSearchInput");
+  const searchBtn = document.getElementById("linkClientSearchBtn");
+  const resultsArea = document.getElementById("linkGenResultsArea");
+  const outputRow = document.getElementById("linkOutputRow");
+  const outputInput = document.getElementById("linkOutputInput");
+  const copyBtn = document.getElementById("copyLinkBtn");
+  const feedback = document.getElementById("copyFeedback");
+  const shareBtnRow = document.getElementById("shareBtnRow");
+  const emailShareBtn = document.getElementById("emailShareBtn");
+  const whatsappShareBtn = document.getElementById("whatsappShareBtn");
+
+  const buildShareMessage = (name, link, lineBreak) => {
+    const nl = lineBreak || "\n";
+    const greeting = name ? `Hi ${name},` : "Hi,";
+    return `${greeting}${nl}${nl}Please use the link below to securely upload your documents:${nl}${link}${nl}${nl}Thanks!`;
+  };
+
+  const renderMatchesList = (results) => `
+    <div class="panel" style="margin-top:14px;">
+      <div class="panel-head"><span class="title">Multiple matches</span><span class="row-meta">${results.length} clients</span></div>
+      <div class="panel-body">
+        ${results.map(c => `
+          <div class="doc-row" data-client-id="${escapeHTML(c.clientId || "")}" style="cursor:pointer;">
+            <div class="client-avatar">${initials(c.name)}</div>
+            <div style="flex:1; min-width:0;">
+              <div class="client-name">${escapeHTML(c.name || "Unknown")}</div>
+              <div class="client-email">${escapeHTML(c.email || "No email on file")} · ${escapeHTML(c.clientId || "—")}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+
+  const wireMatchRows = () => {
+    resultsArea.querySelectorAll("[data-client-id]").forEach(row => {
+      row.addEventListener("click", () => selectClient(row.dataset.clientId));
+    });
+  };
+
+  const selectClient = async (clientId) => {
+    outputRow.style.display = "none";
+    shareBtnRow.style.display = "none";
+    feedback.textContent = "";
+    resultsArea.innerHTML = `<div class="loading-spinner-row">Preparing link…</div>`;
+    linkGenMatches = null;
+
+    let name = "", email = "", phone = "", accessToken = "";
+
+    try {
+      const res = await authFetch(`${CLIENT_DETAIL_API}?id=${encodeURIComponent(clientId)}`);
+      const data = await res.json();
+      if (data && data.client) {
+        // Coerce to strings defensively — if the Sheet stores phone as a
+        // number, the API may return it as a JSON number, not a string.
+        name = String(data.client.name || "");
+        email = String(data.client.email || "");
+        phone = String(data.client.phone || "");
+        accessToken = String(data.client.accessToken || "");
+      }
+    } catch (err) {
+      // If this lookup fails, we still show the link itself — just without pre-filled contact details.
+    }
+
+    const link = `${appSettings.clientPortalBaseUrl}?client=${encodeURIComponent(clientId)}${accessToken ? `&token=${encodeURIComponent(accessToken)}` : ""}`;
+
+    resultsArea.innerHTML = "";
+    outputInput.value = link;
+    outputRow.style.display = "flex";
+    shareBtnRow.style.display = "flex";
+
+    // mailto: bodies need CRLF (\r\n) per RFC 6068 — plain \n is
+    // silently dropped or mangled by some mail clients (notably Outlook).
+    // The mailbox itself (before the ?) should NOT be percent-encoded —
+    // only the query params (subject/body) should be.
+    const emailMessage = buildShareMessage(name, link, "\r\n");
+    const emailHref = `mailto:${email}?subject=${encodeURIComponent("Your document upload link")}&body=${encodeURIComponent(emailMessage)}`;
+    console.log(email);
+    console.log(emailHref);
+    emailShareBtn.href = emailHref;
+
+    const waMessage = buildShareMessage(name, link, "\n");
+    const cleanPhone = phone.replace(/[^\d+]/g, "");
+    const waHref = cleanPhone
+      ? `https://wa.me/${encodeURIComponent(cleanPhone.replace(/^\+/, ""))}?text=${encodeURIComponent(waMessage)}`
+      : `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+    whatsappShareBtn.href = waHref;
+
+    linkGenLink = link;
+    linkGenEmailHref = emailHref;
+    linkGenWhatsappHref = waHref;
+    linkGenNoPhone = !phone;
+
+    if (!phone) {
+      feedback.textContent = "No phone number on file — WhatsApp will open without a pre-selected contact.";
+      feedback.style.color = "var(--ink-3)";
+    }
+  };
+
+  const search = async () => {
+    const q = input.value.trim();
+    if (!q) return;
+    linkGenQuery = q;
+    linkGenLink = "";
+    outputRow.style.display = "none";
+    shareBtnRow.style.display = "none";
+    resultsArea.innerHTML = `<div class="loading-spinner-row">Searching…</div>`;
+
+    try {
+      const res = await authFetch(`${CLIENTS_SEARCH_API}?name=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      const results = Array.isArray(data) ? data : (Array.isArray(data.clients) ? data.clients : []);
+      linkGenMatches = results;
+
+      if (results.length === 0) {
+        resultsArea.innerHTML = `<div class="loading-spinner-row">No clients found matching "${escapeHTML(q)}".</div>`;
+        return;
+      }
+      if (results.length === 1) {
+        selectClient(results[0].clientId);
+        return;
+      }
+      resultsArea.innerHTML = renderMatchesList(results);
+      wireMatchRows();
+    } catch (err) {
+      resultsArea.innerHTML = `<div class="loading-spinner-row">We couldn't search for clients. Please try again.</div>`;
+    }
+  };
+
+  searchBtn.addEventListener("click", search);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+
+  copyBtn.addEventListener("click", async () => {
+    if (!outputInput.value) return;
+    try {
+      await navigator.clipboard.writeText(outputInput.value);
+      flashFeedback(feedback, "Link copied to clipboard.", "var(--green)");
+    } catch (err) {
+      outputInput.select();
+      flashFeedback(feedback, "Press Ctrl/Cmd+C to copy.", "var(--ink-3)");
+    }
+  });
+
+  // Restore whatever state existed before the advisor navigated away.
+  if (linkGenLink) {
+    outputInput.value = linkGenLink;
+    outputRow.style.display = "flex";
+    emailShareBtn.href = linkGenEmailHref;
+    whatsappShareBtn.href = linkGenWhatsappHref;
+    shareBtnRow.style.display = "flex";
+    if (linkGenNoPhone) {
+      feedback.textContent = "No phone number on file — WhatsApp will open without a pre-selected contact.";
+      feedback.style.color = "var(--ink-3)";
+    }
+  } else if (linkGenMatches && linkGenMatches.length > 1) {
+    resultsArea.innerHTML = renderMatchesList(linkGenMatches);
+    wireMatchRows();
+  } else if (linkGenMatches && linkGenMatches.length === 0 && linkGenQuery) {
+    resultsArea.innerHTML = `<div class="loading-spinner-row">No clients found matching "${escapeHTML(linkGenQuery)}".</div>`;
+  }
+}
+
+/* ============================================================
+   License page
+   ============================================================ */
+const PLAN_FEATURES = [
+  { label: "Client onboarding form", tier: "basic" },
+  { label: "Secure upload portal", tier: "basic" },
+  { label: "Document status tracking", tier: "basic" },
+  { label: "Client dashboard & tracking", tier: "basic" },
+  { label: "Document approval", tier: "basic" },
+  { label: "Custom document templates", tier: "professional" },
+  { label: "View uploaded documents", tier: "professional" },
+  { label: "Advanced dashboard & analytics", tier: "professional" },
+  { label: "Automatic reminder workflows", tier: "professional" },
+  { label: "Reminders sent count", tier: "professional" },
+  { label: "Live activity feed", tier: "professional" },
+  { label: "Email notifications", tier: "professional" },
+  { label: "Integrations (CRM, e-signature)", tier: "professional" },
+  { label: "Bulk client requests", tier: "professional" },
+  { label: "Workflow customization", tier: "professional" },
+  { label: "Priority support", tier: "professional" },
+  { label: "AI document processing", tier: "premium" },
+  { label: "Team management", tier: "premium" },
+  { label: "API access", tier: "premium" },
+  { label: "Advanced reports", tier: "premium" },
+  { label: "Advanced security and compliance controls", tier: "premium" },
+];
+
+const PLAN_SHORT_DESCRIPTIONS = {
+  basic: "Essential tools to onboard clients and collect documents.",
+  professional: "Advanced automation for growing advisory firms.",
+  premium: "Complete enterprise automation for large advisory firms.",
+};
+
+const PLAN_ORDER = ["basic", "professional", "premium"];
+
+function mailtoLink(toEmail, subject, body) {
+  return `mailto:${toEmail || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function requestUpgradeMailto(tier) {
+  const tierLabel = PLAN_DISPLAY_NAMES[tier];
+  const firmLine = appSettings.firmName ? `Firm: ${appSettings.firmName}\n` : "";
+  const subject = `Upgrade request — FinanceDocs ${tierLabel} edition`;
+  const body = `Hi,\n\nWe'd like to request an upgrade to the ${tierLabel} edition of FinanceDocs.\n\n${firmLine}Current edition: ${PLAN_DISPLAY_NAMES[getCurrentPlan()]}\n\nThanks!`;
+  return mailtoLink(appSettings.salesEmail, subject, body);
+}
+
+function requestDemoLink(tier) {
+  if (appSettings.demoBookingLink) return appSettings.demoBookingLink;
+  const tierLabel = PLAN_DISPLAY_NAMES[tier];
+  const subject = `Demo request — FinanceDocs ${tierLabel} edition`;
+  const body = `Hi,\n\nWe'd like to request a demo of FinanceDocs ${tierLabel} edition.\n\nThanks!`;
+  return mailtoLink(appSettings.salesEmail, subject, body);
+}
+
+function planCardHTML(tier) {
+  const isCurrent = getCurrentPlan() === tier;
+  const tierLabel = PLAN_DISPLAY_NAMES[tier];
+  return `
+    <div class="billing-plan-card ${isCurrent ? "current" : ""}">
+      <div>
+        ${isCurrent ? `<span class="badge verified" style="margin-bottom:8px;"><span class="badge-dot"></span>Current edition</span>` : ""}
+        <div class="billing-plan-card-name">FinanceDocs ${escapeHTML(tierLabel)}</div>
+        <div class="row-meta" style="margin-top:4px;">${escapeHTML(PLAN_SHORT_DESCRIPTIONS[tier] || "")}</div>
+      </div>
+      <div class="plan-feature-list">
+        ${PLAN_FEATURES.map(f => {
+          const included = PLAN_ORDER.indexOf(tier) >= PLAN_ORDER.indexOf(f.tier);
+          return `
+            <div class="feat ${included ? "included" : "excluded"}">
+              ${included
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>'}
+              <span>${escapeHTML(f.label)}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+      ${isCurrent
+        ? `<button class="btn-ghost" disabled style="opacity:.6; cursor:default;">Current edition</button>`
+        : `<button class="btn-primary" data-upgrade-tier="${tier}">Upgrade to ${escapeHTML(tierLabel)}</button>`}
+    </div>
+  `;
+}
+
+// Context-specific messaging shown at the top of the upgrade dialog,
+// depending on which locked action the advisor clicked. Falls back to
+// no banner (just the general edition breakdown) when no reason is passed —
+// existing callers like the notifications bell and the License page's
+// "Upgrade to X" buttons keep working exactly as before.
+const UPGRADE_REASONS = {
+  view: {
+    tier: "professional",
+    title: "Document Viewing is available in the Professional Edition",
+    body: "Upgrade to securely view uploaded client documents and manage the review process.",
+  },
+  approve: {
+    tier: "professional",
+    title: "Document Approval is available in the Professional Edition",
+    body: "Upgrade to review uploaded documents, approve submissions, and request re-uploads.",
+  },
+  reupload: {
+    tier: "professional",
+    title: "Document Re-upload Requests are available in the Professional Edition",
+    body: "Upgrade to request re-uploads from clients and keep outstanding documents moving.",
+  },
+  bulkReupload: {
+    tier: "professional",
+    title: "Bulk Re-upload Requests are available in the Professional Edition",
+    body: "Upgrade to request re-uploads for every outstanding document on a client at once.",
+  },
+  ai: {
+    tier: "premium",
+    title: "AI Features are available in the Premium Edition",
+    body: "Upgrade to Premium to unlock AI document verification, AI Client Assistant, and intelligent document analysis.",
+  },
+};
+
+// Remembers the last modal shown so the compare-editions modal's Back
+// button can return to the right reason banner.
+let lastUpgradeModalContext = { tier: "professional", reasonKey: undefined };
+
+function openUpgradeModal(tier, reasonKey) {
+  lastUpgradeModalContext = { tier, reasonKey };
+
+  const modalRoot = document.getElementById("modalRoot");
+  const reason = UPGRADE_REASONS[reasonKey];
+  const effectiveTier = reason ? reason.tier : (tier || "professional");
+  const currentLabel = PLAN_DISPLAY_NAMES[getCurrentPlan()];
+
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="upgradeModalOverlay">
+      <div class="modal-box" style="width:480px; max-height:85vh; overflow-y:auto;">
+        <div class="modal-title">Upgrade your FinanceDocs Edition</div>
+        ${reason ? `
+        <div class="upgrade-reason-banner">
+          <div class="upgrade-reason-title">${escapeHTML(reason.title)}</div>
+          <div class="upgrade-reason-body">${escapeHTML(reason.body)}</div>
+        </div>
+        ` : ""}
+        <div class="modal-sub">
+          <p style="margin:0 0 10px;">You're currently using FinanceDocs ${escapeHTML(currentLabel)}.</p>
+          <p style="margin:0;">As your practice grows, FinanceDocs offers higher editions with additional workflow automation and AI capabilities.</p>
+        </div>
+
+        <div class="upgrade-edition-block">
+          <div class="upgrade-edition-name">Professional Edition</div>
+          <div class="upgrade-edition-desc">Designed for firms that need a complete document review workflow.</div>
+          <div class="upgrade-edition-includes">Includes</div>
+          <ul class="upgrade-edition-list">
+            <li>View uploaded documents</li>
+            <li>Approve client documents</li>
+            <li>Request document re-uploads</li>
+            <li>Automatic reminders</li>
+            <li>CRM &amp; e-signature integrations</li>
+            <li>Document templates</li>
+          </ul>
+        </div>
+
+        <div class="upgrade-edition-block">
+          <div class="upgrade-edition-name">Premium Edition</div>
+          <div class="upgrade-edition-desc">Built for firms that want AI-powered document automation.</div>
+          <div class="upgrade-edition-includes">Includes</div>
+          <ul class="upgrade-edition-list">
+            <li>AI Client Assistant</li>
+            <li>AI document verification</li>
+            <li>AI document analysis</li>
+            <li>AI workflow assistance</li>
+            <li>Team management</li>
+            <li>API access</li>
+            <li>Advanced reporting &amp; insights</li>
+            <li>Advanced security and compliance controls</li>
+          </ul>
+        </div>
+
+        <div class="modal-sub" style="margin-top:14px; margin-bottom:0;">
+          <p style="margin:0;">To discuss upgrading your FinanceDocs license, contact our sales team.</p>
+        </div>
+
+        <div class="modal-footer" style="justify-content:flex-start; flex-wrap:wrap; margin-top:16px;">
+          <a class="btn-primary" style="text-decoration:none;" href="${requestUpgradeMailto(effectiveTier)}">Contact Sales</a>
+          <button class="btn-secondary" id="compareEditionsBtn">Compare Editions</button>
+          <button class="btn-ghost" id="closeUpgradeModalBtn" style="margin-left:auto;">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("upgradeModalOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "upgradeModalOverlay") closeUpgradeModal();
+  });
+  document.getElementById("closeUpgradeModalBtn").addEventListener("click", closeUpgradeModal);
+  document.getElementById("compareEditionsBtn").addEventListener("click", openCompareEditionsModal);
+}
+
+function closeUpgradeModal() {
+  document.getElementById("modalRoot").innerHTML = "";
+}
+
+// Full Basic vs Professional vs Premium breakdown, opened from the
+// "Compare Editions" button. Reuses the same PLAN_FEATURES / PLAN_ORDER
+// data that already drives the License page's plan cards, so the two
+// stay in sync automatically.
+function openCompareEditionsModal() {
+  const modalRoot = document.getElementById("modalRoot");
+  const currentPlan = getCurrentPlan();
+  const checkSvg = '<svg class="yes" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  const dashSvg = '<svg class="no" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>';
+
+  modalRoot.innerHTML = `
+    <div class="modal-overlay" id="compareEditionsOverlay">
+      <div class="modal-box" style="width:640px; max-width:96vw; max-height:85vh; overflow-y:auto;">
+        <div class="modal-title">Compare FinanceDocs Editions</div>
+        <div class="modal-sub"><p style="margin:0;">See exactly what each edition includes.</p></div>
+        <div class="compare-table-wrap">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                ${PLAN_ORDER.map(t => `<th>${escapeHTML(PLAN_DISPLAY_NAMES[t])}${currentPlan === t ? '<span class="compare-current">Current</span>' : ""}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${PLAN_FEATURES.map(f => `
+                <tr>
+                  <td>${escapeHTML(f.label)}</td>
+                  ${PLAN_ORDER.map(t => {
+                    const included = PLAN_ORDER.indexOf(t) >= PLAN_ORDER.indexOf(f.tier);
+                    return `<td class="compare-cell">${included ? checkSvg : dashSvg}</td>`;
+                  }).join("")}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer" style="justify-content:flex-start; flex-wrap:wrap; margin-top:14px;">
+          <a class="btn-primary" style="text-decoration:none;" href="${requestUpgradeMailto(lastUpgradeModalContext.tier || "professional")}">Contact Sales</a>
+          <button class="btn-secondary" id="backToUpgradeModalBtn">Back</button>
+          <button class="btn-ghost" id="closeCompareEditionsBtn" style="margin-left:auto;">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("compareEditionsOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "compareEditionsOverlay") closeUpgradeModal();
+  });
+  document.getElementById("closeCompareEditionsBtn").addEventListener("click", closeUpgradeModal);
+  document.getElementById("backToUpgradeModalBtn").addEventListener("click", () => {
+    openUpgradeModal(lastUpgradeModalContext.tier, lastUpgradeModalContext.reasonKey);
+  });
+}
+
+
+// Bump this by hand with each release you ship.
+const SOFTWARE_VERSION = "v1.0.0";
+
+// TODO: build this webhook — reads a "Licenses" sheet you control (one
+// row, since each firm gets its own deployment under Model A). Expected
+// response shape:
+// { "edition": "basic", "status": "Active", "licenseId": "LIC-2026-001",
+//   "purchaseDate": "2026-07-15", "supportExpiryDate": "2026-10-15" }
+// "status" is a free-text column on your Sheet — expected values are
+// Active / Expired / Suspended / Trial, but LICENSE_STATUS_BADGE below
+// falls back gracefully if you add others later.
+const LICENSE_STATUS_API = "https://nkpflow.app.n8n.cloud/webhook/license-status";
+
+const LICENSE_STATUS_BADGE = {
+  active: "verified",   // green
+  trial: "received",    // blue
+  expired: "pending",   // amber — software still works, just needs renewal
+  suspended: "rejected", // red — a deliberate action, not just time passing
+};
+
+function licenseStatusPanelHTML() {
+  return `
+    <div class="panel" style="padding:20px; margin-bottom:14px;" id="licenseStatusPanel">
+      <div class="loading-spinner-row" style="padding:0;">Loading license status…</div>
+    </div>
+  `;
+}
+
+async function loadLicenseStatus() {
+  const panel = document.getElementById("licenseStatusPanel");
+  if (!panel) return;
+
+  try {
+    const res = await authFetch(LICENSE_STATUS_API);
+    const data = await res.json();
+    if (!data || !data.edition) throw new Error("Unexpected response shape");
+
+    const dateFmt = (raw) => {
+      if (!raw) return "—";
+      const d = new Date(raw);
+      return isNaN(d) ? escapeHTML(raw) : d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    };
+
+    const statusRaw = data.status || "Unknown";
+    const badgeClass = LICENSE_STATUS_BADGE[statusRaw.toLowerCase()] || "neutral";
+
+    panel.innerHTML = `
+      <div class="license-status-grid">
+        <div><div class="lbl">Product</div><div class="name">FinanceDocs</div></div>
+        <div><div class="lbl">Current edition</div><div class="name">${escapeHTML(PLAN_DISPLAY_NAMES[data.edition] || data.edition)}</div></div>
+        <div><div class="lbl">License status</div><div class="name"><span class="badge ${badgeClass}"><span class="badge-dot"></span>${escapeHTML(statusRaw)}</span></div></div>
+        <div><div class="lbl">License type</div><div class="name">Perpetual license</div></div>
+        <div><div class="lbl">License ID</div><div class="name">${escapeHTML(data.licenseId || "—")}</div></div>
+        <div><div class="lbl">Purchase date</div><div class="name">${dateFmt(data.purchaseDate)}</div></div>
+        <div><div class="lbl">Software version</div><div class="name">${escapeHTML(SOFTWARE_VERSION)}</div></div>
+        <div><div class="lbl">Support expiry</div><div class="name">${dateFmt(data.supportExpiryDate)}</div></div>
+      </div>
+    `;
+  } catch (err) {
+    panel.innerHTML = `<div class="loading-spinner-row" style="padding:0;">Couldn't load license status. The software keeps working either way — this only affects the status shown here.</div>`;
+  }
+}
+
+function supportUpdatesCardHTML() {
+  return `
+    <div class="panel" style="padding:20px; margin-top:14px;">
+      <div style="font-size:15px; font-weight:600; margin-bottom:10px;">Support and updates</div>
+      <p style="font-size:13px; color:var(--ink-2); line-height:1.6; margin:0 0 8px;">Your FinanceDocs license includes software updates and technical support until the support expiry date.</p>
+      <p style="font-size:13px; color:var(--ink-2); line-height:1.6; margin:0 0 8px;">After support expires, your software will continue to function normally.</p>
+      <p style="font-size:13px; color:var(--ink-2); line-height:1.6; margin:0;">Renewing support provides access to future software updates, technical assistance, and new features.</p>
+    </div>
+  `;
+}
+
+function licenseActionsHTML() {
+  const invoiceLink = mailtoLink(appSettings.supportEmail, "Invoice request — FinanceDocs", "Hi,\n\nCould you send us a copy of our FinanceDocs invoice?\n\nThanks!");
+  const renewLink = mailtoLink(appSettings.salesEmail, "Support renewal — FinanceDocs", "Hi,\n\nWe'd like to renew our FinanceDocs support and updates.\n\nThanks!");
+  const supportLink = mailtoLink(appSettings.supportEmail, "Support request — FinanceDocs", "Hi,\n\nWe need help with FinanceDocs.\n\n[Describe the issue here]\n\nThanks!");
+  const featureLink = mailtoLink(appSettings.supportEmail, "Feature request — FinanceDocs", "Hi,\n\nWe'd like to suggest a feature for FinanceDocs:\n\n[Describe your idea here]\n\nThanks!");
+
+  return `
+    <div class="panel" style="padding:20px; margin-top:14px;">
+      <div style="font-size:15px; font-weight:600; margin-bottom:14px;">License actions</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn-secondary" style="text-decoration:none;" href="${invoiceLink}">Request invoice</a>
+        <a class="btn-secondary" style="text-decoration:none;" href="${renewLink}">Renew support</a>
+        <a class="btn-secondary" style="text-decoration:none;" href="${supportLink}">Contact support</a>
+        <a class="btn-secondary" style="text-decoration:none;" href="${featureLink}">Request feature</a>
+      </div>
+    </div>
+  `;
+}
+
+function licenseHTML() {
+  return `
+    <div class="page-head">
+      <h1>License</h1>
+      <p>Your current edition, license status, and what each edition includes. FinanceDocs continues to work after your support period ends — you just won't receive new updates or support access until it's renewed.</p>
+    </div>
+
+    ${licenseStatusPanelHTML()}
+
+    <div class="plan-grid">
+      ${PLAN_ORDER.map(planCardHTML).join("")}
+    </div>
+
+    ${supportUpdatesCardHTML()}
+    ${licenseActionsHTML()}
+
+    <div class="row-meta" style="margin-top:14px; max-width:560px;">
+      Only the Basic edition is currently available for purchase. Professional and Premium are shown for reference and will open for upgrade requests once released.
+    </div>
+  `;
+}
+
+function initLicensePage() {
+  loadLicenseStatus();
+  document.querySelectorAll("[data-upgrade-tier]").forEach(btn => {
+    btn.addEventListener("click", () => openUpgradeModal(btn.dataset.upgradeTier));
+  });
+}
+
+/* ============================================================
+   Settings page
+   ============================================================ */
+function settingsHTML() {
+  return `
+    <div class="page-head">
+      <h1>Settings</h1>
+      <p>Firm details, advisor identity, and where your client upload portal is hosted.</p>
+    </div>
+
+    <div class="panel settings-form">
+      <div class="form-group">
+        <label class="form-label">Firm name</label>
+        <input class="form-input" id="settingsFirmName" type="text" value="${escapeHTML(appSettings.firmName)}" placeholder="e.g. Reyes Wealth Advisors" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Advisor name</label>
+        <input class="form-input" id="settingsAdvisorName" type="text" value="${escapeHTML(appSettings.advisorName)}" placeholder="e.g. Sarah Reyes" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Advisor email</label>
+        <input class="form-input" id="settingsAdvisorEmail" type="email" value="${escapeHTML(appSettings.advisorEmail)}" placeholder="e.g. sarah@reyeswealth.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client portal URL</label>
+        <input class="form-input" id="settingsPortalUrl" type="text" value="${escapeHTML(appSettings.clientPortalBaseUrl)}" placeholder="https://your-domain.com/docflow-client-portal.html" />
+      </div>
+      <div class="settings-hint">This is the base URL used to build every client's personal upload link (in Send Upload Link and on client profiles) — point it at wherever you actually host docflow-client-portal.html.</div>
+      <div class="form-group">
+        <label class="form-label">Sales email</label>
+        <input class="form-input" id="settingsSalesEmail" type="email" value="${escapeHTML(appSettings.salesEmail)}" placeholder="e.g. you@yourcompany.com" />
+      </div>
+      <div class="settings-hint">Where upgrade requests and support renewals land, from the License page.</div>
+      <div class="form-group">
+        <label class="form-label">Support email</label>
+        <input class="form-input" id="settingsSupportEmail" type="email" value="${escapeHTML(appSettings.supportEmail)}" placeholder="e.g. support@yourcompany.com" />
+      </div>
+      <div class="settings-hint">Where invoice requests, support questions, and feature requests land, from the License page.</div>
+      <div class="form-group">
+        <label class="form-label">Demo booking link (optional)</label>
+        <input class="form-input" id="settingsDemoLink" type="text" value="${escapeHTML(appSettings.demoBookingLink)}" placeholder="e.g. a Calendly link" />
+      </div>
+      <div class="settings-hint">If set, "Request demo" opens this link directly. If left blank, it falls back to an email to your Sales address.</div>
+      <div class="form-group">
+        <label class="form-label">Current edition</label>
+        <select class="select-input" id="settingsPlanSelect" style="width:100%;">
+          <option value="basic" ${appSettings.plan === "basic" ? "selected" : ""}>Basic</option>
+          <option value="professional" ${appSettings.plan === "professional" ? "selected" : ""}>Professional</option>
+          <option value="premium" ${appSettings.plan === "premium" ? "selected" : ""}>Premium</option>
+        </select>
+      </div>
+      <div class="settings-hint">This is a manual override for testing what each edition unlocks. It doesn't reflect a real purchase — the License page's actual status comes from your license-status webhook once that's built.</div>
+      <div class="settings-save-row">
+        <button class="btn-primary" id="saveSettingsBtn">Save settings</button>
+        <div class="copy-feedback" id="settingsFeedback"></div>
+      </div>
+    </div>
+
+    <div class="row-meta" style="margin-top:14px; max-width:520px;">
+      Settings are saved to your Settings API and cached in this browser for fast loading — changes made here are shared across devices.
+    </div>
+  `;
+}
+
+function initSettingsPage() {
+  const saveBtn = document.getElementById("saveSettingsBtn");
+  const feedback = document.getElementById("settingsFeedback");
+
+  saveBtn.addEventListener("click", async () => {
+    appSettings.firmName = document.getElementById("settingsFirmName").value.trim();
+    appSettings.advisorName = document.getElementById("settingsAdvisorName").value.trim();
+    appSettings.advisorEmail = document.getElementById("settingsAdvisorEmail").value.trim();
+    appSettings.clientPortalBaseUrl = document.getElementById("settingsPortalUrl").value.trim() || DEFAULT_SETTINGS.clientPortalBaseUrl;
+    appSettings.salesEmail = document.getElementById("settingsSalesEmail").value.trim();
+    appSettings.supportEmail = document.getElementById("settingsSupportEmail").value.trim();
+    appSettings.demoBookingLink = document.getElementById("settingsDemoLink").value.trim();
+    appSettings.plan = document.getElementById("settingsPlanSelect").value;
+
+    applyPlanUI();
+    renderNav();
+
+    saveBtn.disabled = true;
+    flashFeedback(feedback, "Saving…", "var(--ink-3)", 15000);
+
+    try {
+      await persistAppSettings(appSettings);
+      flashFeedback(feedback, "Settings saved.", "var(--green)");
+    } catch (err) {
+      flashFeedback(feedback, "Couldn't save settings to the server. Please try again.", "#C0392B");
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+}
+
+const API_URL = "http://localhost:3000/api/dashboard";
+function loadDashboard() {
+  // Fired together, not one-after-another — no card has to wait for
+  // another to finish loading first.
+  loadDashboardTotals();
+  loadInProgressCount();
+  loadApprovedCount();
+}
+
+async function loadDashboardTotals() {
+  try {
+    const response = await authFetch(API_URL);
+    const result = await response.json();
+    const dashboard = result.dashboard;
+
+    const setValue = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    setValue("totalClients", dashboard.totalClients);
+    setValue("completedClients", dashboard.completedClients);
+    setValue("waitingClients", dashboard.waitingClients);
+    setValue("pendingDocuments", dashboard.pendingDocuments);
+    setValue("receivedDocuments", dashboard.receivedDocuments);
+  } catch (err) {
+    console.error("Dashboard API Error:", err);
+  }
+}
+
+// In Progress has no aggregate field on webhook/dashboard, so it's
+// derived from the same per-client list the stat breakdowns use.
+// Runs independently so a slow/failed clients-list call can't hold
+// up the other 5 stats, and vice versa.
+async function loadInProgressCount() {
+  try {
+    const clients = await fetchClientsList();
+    const inProgressCount = clients.filter(
+      c => Number(c.receivedCount || 0) > 0 && Number(c.pendingCount || 0) > 0
+    ).length;
+    const el = document.getElementById("inProgressClients");
+    if (el) el.textContent = inProgressCount;
+  } catch (err) {
+    console.error("In Progress count error:", err);
+  }
+}
+
+// Requires clients-list to return an "approvedCount" field per client
+// (a document-level count, matching Pending/Received documents — not
+// a client count). Add it alongside pendingCount/receivedCount once
+// document approval is wired up on the backend.
+async function loadApprovedCount() {
+  try {
+    const clients = await fetchClientsList();
+    const approvedTotal = clients.reduce((sum, c) => sum + Number(c.approvedCount || 0), 0);
+    const el = document.getElementById("approvedDocuments");
+    if (el) el.textContent = approvedTotal;
+  } catch (err) {
+    console.error("Approved count error:", err);
+  }
+}
+
+function applyPlanUI() {
+  const plan = getCurrentPlan();
+  const titleEl = document.getElementById("planTitle");
+  const subEl = document.getElementById("planSub");
+  if (titleEl) titleEl.textContent = (PLAN_DISPLAY_NAMES[plan] || plan) + " edition";
+  if (subEl) subEl.textContent = PLAN_LABELS[plan] || "";
+
+  const nameEl = document.getElementById("advisorName");
+  const avatarEl = document.getElementById("advisorAvatar");
+  if (nameEl) nameEl.textContent = appSettings.advisorName || "Advisor";
+  if (avatarEl) avatarEl.textContent = appSettings.advisorName ? initials(appSettings.advisorName) : "AD";
+
+  updateNotificationsBellBadge();
+}
+
+/* Global client search — available from the topbar on every page.
+   Routes through performClientSearch(), which hits CLIENTS_SEARCH_API
+   (see its definition above the Clients module) and lets the advisor
+   pick the right client when a name matches more than one person. */
+function searchClientAndNavigate(query) {
+  const q = (query || "").trim();
+  if (!q) return;
+  active = "clients";
+  renderNav();
+  document.getElementById("topbarTitle").textContent = PAGE_META[active].title;
+  performClientSearch(q);
+}
+
+function initGlobalSearch() {
+  const input = document.getElementById("globalSearchInput");
+  if (!input) return;
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchClientAndNavigate(input.value);
+  });
+}
+
+function bootstrapApp() {
+  applyPlanUI();
+  renderNav();
+  renderContent();
+  document.getElementById("topbarTitle").textContent = PAGE_META[active].title;
+  fetchAppSettings(); // refreshes appSettings from the server; local cache is used until this resolves
+}
+
+initLoginScreen();
+initGlobalSearch();
+initProfileMenu();
+initNotificationsBell();
+
+if (isLoggedIn()) {
+  showApp();
+  bootstrapApp();
+} else {
+  showLoginScreen();
+}
+</script>
+</body>
+</html>
