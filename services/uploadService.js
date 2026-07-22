@@ -1,33 +1,24 @@
 const sheets = require("./googleSheets");
 const { getClientById, updateClientStatus } = require("./clientService");
 const { getChecklistByClientId, updateChecklistRow } = require("./checklistService");
-const { uploadFileToFolder } = require("./googleDrive");
+const { uploadDocumentToCloudinary } = require("./cloudinary");
 const findMatchingChecklist = require("../helpers/checklistFinder");
 const calculateClientStatus = require("../helpers/calculateClientStatus");
 
 /**
  * NOTE ON ASSUMPTIONS (please confirm/adjust these three things):
  *
- * 1. File naming: since document upload previously lived entirely in n8n,
- *    there's no existing Express code defining the naming convention. This
- *    builds "<Client ID>-<Document>-<original filename>". Change buildFileName()
- *    below if the old workflow used something else (e.g. just the original
- *    filename, or a checklist-ID-based name).
+ * 1. File naming: "<Client ID>-<Document>-<original filename>". Change
+ *    buildFileName() below if a different convention is needed.
  *
  * 2. Audit Log sheet: assumed tab name "Audit Log" with columns
  *    Timestamp | Client ID | Client Name | Action | Document | File URL | Performed By
- *    (range 'Audit Log'!A:G below). Update the range and the values array
- *    together if your actual tab name or column order differs.
  *
- * 3. Response shape: since the old response was produced by n8n (not visible
- *    to me), the shape below is inferred from the sibling upload-page
- *    endpoint's conventions. Compare against what the upload-page frontend
- *    actually reads from the response and adjust processDocumentUpload's
- *    return value if it expects different keys.
+ * 3. Response shape: inferred from the client portal's expectations.
  */
 
 function buildFileName(clientId, document, originalName) {
-    return `${clientId}-${document}-${originalName}`;
+   return `${clientId}-${document}`;
 }
 
 async function appendAuditLogRow({ clientId, clientName, document, fileUrl }) {
@@ -73,14 +64,13 @@ async function processDocumentUpload({ clientId, token, document, file }) {
         throw err;
     }
 
-    // 2. Upload the document into the client's Drive folder
+    // 2. Upload the document to Cloudinary (FinanceDocs/{clientId})
     const uploadDate = new Date().toISOString().split("T")[0];
     const fileName = buildFileName(clientId, document, file.originalname);
 
-    const driveResult = await uploadFileToFolder(
-        clientData["Folder ID"],
+    const uploadResult = await uploadDocumentToCloudinary(
+        clientId,
         fileName,
-        file.mimetype,
         file.buffer
     );
 
@@ -102,18 +92,18 @@ async function processDocumentUpload({ clientId, token, document, file }) {
 
     const match = matches[0];
 
-    // 4. Update that checklist row: Status, Uploaded File, Upload Date,
-    //    Verified By, Drive File ID, File URL
+    // 4. Update that checklist row (Drive File ID column now holds the
+    //    Cloudinary public_id - column/field name kept unchanged)
     await updateChecklistRow(match.rowNumber, {
         status: "Received",
         uploadedFile: fileName,
-        uploadDate: match.uploadDate,
+        uploadDate: uploadDate,
         verifiedBy: "Automation",
-        fileUrl: driveResult.fileUrl,
-        driveFileId: driveResult.driveFileId
+        fileUrl: uploadResult.fileUrl,
+        driveFileId: uploadResult.publicId
     });
 
-    // 5. Re-read every checklist row for the client and recalculate overall status
+    // 5. Re-read every checklist row and recalculate overall status
     const refreshedChecklist = await getChecklistByClientId(clientId);
     const overallStatus = calculateClientStatus(refreshedChecklist);
 
@@ -125,10 +115,10 @@ async function processDocumentUpload({ clientId, token, document, file }) {
         clientId,
         clientName: clientData["Client Name"],
         document,
-        fileUrl: driveResult.fileUrl
+        fileUrl: uploadResult.fileUrl
     });
 
-    // 8. Response shape expected by the upload page (see assumptions above)
+    // 8. Response shape expected by the upload page (unchanged)
     return {
         success: true,
         client: {
@@ -141,7 +131,7 @@ async function processDocumentUpload({ clientId, token, document, file }) {
             status: "Received",
             uploadedFile: fileName,
             uploadDate,
-            fileUrl: driveResult.fileUrl
+            fileUrl: uploadResult.fileUrl
         }
     };
 
