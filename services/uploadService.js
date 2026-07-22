@@ -18,7 +18,8 @@ const calculateClientStatus = require("../helpers/calculateClientStatus");
  */
 
 function buildFileName(clientId, document, originalName) {
-   return `${clientId}-${document}`;
+    const safeDocument = document.replace(/\s+/g, "");
+    return `${clientId}-${safeDocument}-${originalName}`;
 }
 
 async function appendAuditLogRow({ clientId, clientName, document, fileUrl }) {
