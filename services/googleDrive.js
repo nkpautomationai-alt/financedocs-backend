@@ -1,14 +1,28 @@
 const { google } = require("googleapis");
 const { Readable } = require("stream");
+const path = require("path");
 
-const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+let auth;
 
-const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: [
-        "https://www.googleapis.com/auth/drive"
-    ]
-});
+if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+    // Render
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+
+    auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: [
+            "https://www.googleapis.com/auth/drive"
+        ]
+    });
+} else {
+    // Local development
+    auth = new google.auth.GoogleAuth({
+        keyFile: path.join(__dirname, "../credentials/financedocs-service-account.json"),
+        scopes: [
+            "https://www.googleapis.com/auth/drive"
+        ]
+    });
+}
 
 const drive = google.drive({
     version: "v3",
