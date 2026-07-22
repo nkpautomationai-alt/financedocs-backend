@@ -1650,8 +1650,8 @@ function clientSearchScreenHTML() {
    client Google Sheet by name (case-insensitive, partial match) and
    returns that shape — your existing Client Details API only supports
    exact-ID lookup and can't power name search on its own. */
-const CLIENTS_SEARCH_API = "http://localhost:3000/api/clients/search";
-const CLIENT_DETAIL_API = "http://localhost:3000/api/clients/client";
+const CLIENTS_SEARCH_API = "https://financedocs-backend.onrender.com/api/clients/search";
+const CLIENT_DETAIL_API = "https://financedocs-backend.onrender.com/api/clients/client";
 
 async function performClientSearch(query) {
   const q = (query || "").trim();
@@ -3195,7 +3195,7 @@ function initSettingsPage() {
   });
 }
 
-const API_URL = "http://localhost:3000/api/dashboard";
+const API_URL = "https://financedocs-backend.onrender.com/api/dashboard";
 function loadDashboard() {
   // Fired together, not one-after-another — no card has to wait for
   // another to finish loading first.
