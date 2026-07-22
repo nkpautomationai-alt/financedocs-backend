@@ -19,7 +19,14 @@ const calculateClientStatus = require("../helpers/calculateClientStatus");
 
 function buildFileName(clientId, document, originalName) {
     const safeDocument = document.replace(/\s+/g, "");
-    return `${clientId}-${safeDocument}-${originalName}`;
+
+    // Strip the file extension (Cloudinary tracks format separately)
+    const nameWithoutExt = originalName.replace(/\.[^/.]+$/, "");
+
+    // Replace spaces and any unsafe characters with underscores
+    const safeOriginalName = nameWithoutExt.replace(/[^a-zA-Z0-9_-]+/g, "_");
+
+    return `${clientId}-${safeDocument}-${safeOriginalName}`;
 }
 
 async function appendAuditLogRow({ clientId, clientName, document, fileUrl }) {
