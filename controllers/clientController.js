@@ -6,6 +6,8 @@ const generateChecklist = require("../helpers/checklistGenerator");
 const { createChecklistRows } = require("../services/checklistService");
 const { searchClients } = require("../services/clientService");
 const { getClientById } = require("../services/clientService");
+const { getClientActivityTimeline } = require("../services/clientService");
+const { getClientAuditLog } = require("../services/clientService");
 
 async function search(req, res) {
     try {
@@ -152,8 +154,90 @@ async function createClient(req, res) {
 
 }
 
+async function getActivity(req, res) {
+    try {
+
+        const { client } = req.query;
+
+        if (!client) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing client id."
+            });
+        }
+
+        // Sourced from the Activity Timeline sheet — this is the exact
+        // shape the existing client profile timeline UI already renders
+        // (Activity Type, Description, Performed By, Date & Time), so
+        // entries are returned as-is with no reshaping/renaming.
+        const activities = await getClientActivityTimeline(client);
+
+        res.json({
+            success: true,
+            activities
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+}
+
+// Separate from getActivity above — this reads the Audit Log sheet
+// (Timestamp, Client ID, Client Name, Action, Document, File URL,
+// Performed By) for reporting/compliance/export/AI use cases. Not
+// currently consumed by any UI.
+async function getAuditLog(req, res) {
+    try {
+
+        const { client } = req.query;
+
+        if (!client) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing client id."
+            });
+        }
+
+        const rawEntries = await getClientAuditLog(client);
+
+        const entries = rawEntries.map(e => ({
+            timestamp: e["Timestamp"] || "",
+            clientId: e["Client ID"] || "",
+            clientName: e["Client Name"] || "",
+            action: e["Action"] || "",
+            document: e["Document"] || "",
+            fileUrl: e["File URL"] || "",
+            performedBy: e["Performed By"] || ""
+        }));
+
+        res.json({
+            success: true,
+            activities: entries
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+}
+
 module.exports = {
     createClient,
     search,
-    getClient
+    getClient,
+    getActivity,
+    getAuditLog
 };
