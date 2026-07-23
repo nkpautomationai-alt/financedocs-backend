@@ -889,7 +889,7 @@ const AUTH_HEADER_NAME = "X-API-Key";
 const AUTH_TOKEN_STORAGE_KEY = "financedocs_auth_token";
 // Any one advisor-facing endpoint works here — it's only used to
 // verify the password is accepted, not to fetch anything specific.
-const AUTH_CHECK_URL = "https://nkpflow.app.n8n.cloud/webhook/dashboard";
+const AUTH_CHECK_URL = "https://financedocs-backend.onrender.com/api/dashboard";
 
 let authToken = null;
 try { authToken = sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || null; } catch (err) { authToken = null; }
@@ -1058,8 +1058,8 @@ let active = "dashboard";
    persistAppSettings() below for the actual network calls.
    ============================================================ */
 const SETTINGS_STORAGE_KEY = "financedocs_settings_v1";
-const SETTINGS_GET_URL = "https://nkpflow.app.n8n.cloud/webhook/settings";
-const SETTINGS_POST_URL = "https://nkpflow.app.n8n.cloud/webhook/Save Settings";
+const SETTINGS_GET_URL = "https://financedocs-backend.onrender.com/api/settings";
+const SETTINGS_POST_URL = "https://financedocs-backend.onrender.com/api/settings";
 
 const DEFAULT_SETTINGS = {
   plan: "basic", // "basic" | "professional" | "premium"
@@ -1099,7 +1099,7 @@ function cacheAppSettings(settings) {
 
 let appSettings = loadAppSettings();
 
-// GET https://nkpflow.app.n8n.cloud/webhook/settings
+// GET https://financedocs-backend.onrender.com/api/settings
 // Same authFetch() pattern as every other advisor-facing API. Fired
 // once at boot (see bootstrapApp()); if it fails for any reason, the
 // app just keeps using whatever's cached locally.
@@ -1120,7 +1120,7 @@ async function fetchAppSettings() {
   }
 }
 
-// POST https://nkpflow.app.n8n.cloud/webhook/Save Settings
+// POST https://financedocs-backend.onrender.com/api/settings
 // Called from the Settings page's Save button (see initSettingsPage()).
 async function persistAppSettings(settings) {
   cacheAppSettings(settings);
@@ -1439,7 +1439,7 @@ function renderContent() {
    endpoint only returns firm-wide totals, not a per-client breakdown,
    so this can't be built from that alone.
    ============================================================ */
-const CLIENTS_LIST_API = "https://nkpflow.app.n8n.cloud/webhook/clients-list";
+const CLIENTS_LIST_API = "https://financedocs-backend.onrender.com/api/clients";
 
 let clientsListCache = null;
 
@@ -1693,7 +1693,7 @@ async function openClientProfile(id) {
   activityLoadError = null;
   renderClientsSection();
 
-  const url = `https://nkpflow.app.n8n.cloud/webhook/client?id=${encodeURIComponent(id)}`;
+  const url = `${CLIENT_DETAIL_API}?id=${encodeURIComponent(id)}`;
   console.log("[FinanceDocs] Fetching client profile from:", url);
 
   try {
@@ -1721,7 +1721,7 @@ async function openClientProfile(id) {
 
 async function loadClientActivity(id) {
   const token = ++activityRequestToken;
-  const url = `https://nkpflow.app.n8n.cloud/webhook/activity?client=${encodeURIComponent(id)}`;
+  const url = `https://financedocs-backend.onrender.com/api/clients/activity?client=${encodeURIComponent(id)}`;
   console.log("[FinanceDocs] Fetching activity timeline from:", url);
 
   try {
@@ -2205,7 +2205,7 @@ let templatesFetched = false;
 let templatesView = "list";
 let selectedTemplateId = null;
 
-const TEMPLATES_API_URL = "https://nkpflow.app.n8n.cloud/webhook/templates";
+const TEMPLATES_API_URL = "https://financedocs-backend.onrender.com/api/templates";
 
 const TEMPLATE_ICON = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>';
 
@@ -2989,7 +2989,7 @@ const SOFTWARE_VERSION = "v1.0.0";
 // "status" is a free-text column on your Sheet — expected values are
 // Active / Expired / Suspended / Trial, but LICENSE_STATUS_BADGE below
 // falls back gracefully if you add others later.
-const LICENSE_STATUS_API = "https://nkpflow.app.n8n.cloud/webhook/license-status";
+const LICENSE_STATUS_API = "https://financedocs-backend.onrender.com/api/license-status";
 
 const LICENSE_STATUS_BADGE = {
   active: "verified",   // green
