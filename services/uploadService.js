@@ -119,13 +119,18 @@ async function processDocumentUpload({ clientId, token, document, file }) {
     await updateClientStatus(clientId, overallStatus);
 
     // 7. Append an Audit Log row
+try {
     await appendAuditLogRow({
         clientId,
         clientName: clientData["Client Name"],
         document,
         fileUrl: uploadResult.fileUrl
     });
-
+    console.log("✅ Audit log added successfully");
+} catch (err) {
+    console.error("❌ Audit Log Error:", err.message);
+    console.error(err);
+}
     // 8. Response shape expected by the upload page (unchanged)
     return {
         success: true,
