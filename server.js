@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use(express.static(path.join(__dirname, "public")));
 // Import routes
 const dashboardRoutes = require("./routes/dashboard");
 const clientsRoutes = require("./routes/clients");
