@@ -230,9 +230,102 @@ async function searchClients(searchText) {
     return results;
 
 }
+/**
+ * Reads every row from the Activity Timeline sheet belonging to the
+ * given client, newest first. This is the sheet the existing client
+ * profile timeline UI already renders from (Activity Type, Description,
+ * Performed By, Date & Time) — kept exactly as the frontend expects it,
+ * no reshaping.
+ */
+async function getClientActivityTimeline(clientId) {
+
+    const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: "Activity Timeline!A:Z"
+    });
+
+    const rows = response.data.values || [];
+
+    if (rows.length < 2) {
+        return [];
+    }
+
+    const headers = rows[0];
+
+    const activities = [];
+
+    for (let i = 1; i < rows.length; i++) {
+
+        const row = rows[i];
+
+        const entry = {};
+
+        headers.forEach((header, index) => {
+            entry[header] = row[index] || "";
+        });
+
+        if (entry["Client ID"] === clientId) {
+            activities.push(entry);
+        }
+
+    }
+
+    activities.sort((a, b) => new Date(b["Date & Time"]) - new Date(a["Date & Time"]));
+
+    return activities;
+
+}
+
+/**
+ * Reads every row from the Audit Log sheet belonging to the given
+ * client, newest first. Separate from the Activity Timeline sheet above —
+ * this is the fuller audit trail (Timestamp, Action, Document, File URL)
+ * meant for reporting/compliance/exports, not the profile timeline UI.
+ */
+async function getClientAuditLog(clientId) {
+
+    const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: "Audit Log!A:Z"
+    });
+
+    const rows = response.data.values || [];
+
+    if (rows.length < 2) {
+        return [];
+    }
+
+    const headers = rows[0];
+
+    const entries = [];
+
+    for (let i = 1; i < rows.length; i++) {
+
+        const row = rows[i];
+
+        const entry = {};
+
+        headers.forEach((header, index) => {
+            entry[header] = row[index] || "";
+        });
+
+        if (entry["Client ID"] === clientId) {
+            entries.push(entry);
+        }
+
+    }
+
+    entries.sort((a, b) => new Date(b["Timestamp"]) - new Date(a["Timestamp"]));
+
+    return entries;
+
+}
+
 module.exports = {
     createClient,
     getClientById,
     updateClientStatus,
-    searchClients
+    searchClients,
+    getClientActivityTimeline,
+    getClientAuditLog
 };
