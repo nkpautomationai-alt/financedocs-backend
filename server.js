@@ -15,6 +15,7 @@ const templatesRoutes = require("./routes/templates");
 const licenseRoutes = require("./routes/license");
 const uploadPageRoutes = require("./routes/uploadPage");
 const uploadDocumentRoutes = require("./routes/uploadDocument");
+const settingsRoutes = require("./routes/settings");
 //const uploadRoutes = require("./routes/uploadDocument");
 
 // Use routes
@@ -24,6 +25,7 @@ app.use("/api/templates", templatesRoutes);
 app.use("/api/license-status", licenseRoutes);
 app.use("/api/upload-page", uploadPageRoutes);
 app.use("/api/upload-document", uploadDocumentRoutes);
+app.use("/api/settings", settingsRoutes);
 //app.use("/api", uploadRoutes);
 // Home route
 /*app.get("/", (req, res) => {
